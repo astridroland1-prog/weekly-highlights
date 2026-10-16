@@ -47,6 +47,11 @@ button:disabled{opacity:.55;cursor:wait}
 .chip b{font:700 18px var(--display);letter-spacing:.05em}
 .chip button{padding:4px 10px;font-size:13px;border-radius:999px;background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
 .chip button:hover{background:rgba(255,255,255,.28)}
+.wknav{padding:4px}
+.wknav #wkPrev,.wknav #wkNext{width:30px;height:30px;padding:0;font-size:18px;line-height:1}
+.wknav > span{padding:0 4px}
+.archlink{color:#fff;font-size:14px;font-weight:600;background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;text-decoration:none}
+.archlink:hover{background:rgba(0,5,50,.8)}
 .lang{display:flex;background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px}
 .lang button{padding:4px 12px;font-size:13px;border-radius:999px;border:0;background:transparent;color:#fff}
 .lang button[aria-pressed="true"]{background:#fff;color:#000B72}
@@ -144,8 +149,8 @@ textarea{resize:vertical;min-height:110px}
   <div class="top">
     <div class="brand"><img src="/assets/logo.png" alt="Feldschlösschen"><div><b>Weekly Highlights</b><span>Marketing Feldschlösschen</span></div></div>
     <div class="tools">
-      <div class="chip"><span><b id="kwLabel"></b> · <span id="rangeLabel"></span></span></div>
-      <div class="lang wk" role="group" aria-label="Woche / Semaine"><button data-o="1" type="button"></button><button data-o="0" type="button"></button><button data-o="-1" type="button"></button></div>
+      <div class="chip wknav"><button id="wkPrev" type="button" aria-label="Vorherige Woche">‹</button><span><b id="kwLabel"></b> · <span id="rangeLabel"></span></span><button id="wkNext" type="button" aria-label="Nächste Woche">›</button><button id="wkToday" type="button" hidden></button></div>
+      <a class="archlink" href="/archiv" id="archLink"></a>
       <div class="lang" role="group" aria-label="Sprache / Langue"><button id="langDE" type="button" aria-pressed="true">DE</button><button id="langFR" type="button" aria-pressed="false">FR</button></div>
     </div>
   </div>
@@ -170,7 +175,8 @@ const RECIPIENT_NAME = "Astrid";
 const MAX_FILE = 4.4*1024*1024;   // per file (server limit)
 const MAX_FILES = 10;             // per entry
 const MAX_SIDE = 1400;            // photos are shrunk to this many pixels on their long side
-const POLL_MS = 30000;            // refresh the board while nobody is editing
+const POLL_MS = 30000;
+const MAX_AHEAD = 26;             // weeks the team can plan ahead            // refresh the board while nobody is editing
 
 const PARTS = [
   {id:"highlight", fields:["title","detail","link"], media:true,
@@ -187,7 +193,7 @@ const T = {
   de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Hier seht ihr alles, was das Team schon eingetragen hat. Ergänzt bestehende Einträge oder fügt neue hinzu – "+RECIPIENT_NAME+" macht daraus die Weekly Highlights.",
       edit:"Bearbeiten / ergänzen", save:"Speichern", saving:"Wird gespeichert …", cancel:"Abbrechen", remove:"Entfernen", saved:"Gespeichert ✓", uploading:"Fotos werden hochgeladen",
       media:"Fotos und Videos", drop:"Fotos oder Videos hinzufügen", dropSub:"klicken oder hierher ziehen", tooBig:"zu gross", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15 Sek.) – längere bitte als Link.",
-      lastW:"Letzte Woche", thisW:"Diese Woche", nextW:"Nächste Woche", nextNote:"Ihr tragt für nächste Woche ein. Diese Einträge erscheinen in den Weekly Highlights der KW {w}.", lastNote:"Ihr tragt für letzte Woche ein (KW {w}).", kw:"KW", refresh:"Aktualisieren", loading:"Lädt …", loadFail:"Einträge konnten nicht geladen werden. «Aktualisieren» versuchen.",
+      today:"Zur aktuellen Woche", archive:"Archiv", nextNote:"Ihr tragt im Voraus ein – für die KW {w} ({n}). Diese Einträge erscheinen in den Weekly Highlights dieser Woche.", lastNote:"Ihr schaut eine vergangene Woche an (KW {w}). Ergänzungen sind noch möglich.", inWeeks:["in 1 Woche","in {n} Wochen"], kw:"KW", refresh:"Aktualisieren", loading:"Lädt …", loadFail:"Einträge konnten nicht geladen werden. «Aktualisieren» versuchen.",
       updated:"Stand", entries:["Eintrag","Einträge"], changed:"geändert", added:"erstellt", justNow:"gerade eben", minAgo:"vor {n} Min.", hAgo:"vor {n} Std.",
       empty:"Bitte zuerst etwas eintragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Eintrag.",
       saveFail:"Speichern hat nicht geklappt. Bitte nochmals versuchen.", conflict:"Jemand hat diesen Eintrag gerade geändert. Die neue Version wird angezeigt – bitte deine Ergänzung nochmals einfügen.",
@@ -195,7 +201,7 @@ const T = {
   fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Vous voyez ici tout ce que l'équipe a déjà saisi. Complétez les entrées existantes ou ajoutez-en de nouvelles – "+RECIPIENT_NAME+" en fera les Weekly Highlights.",
       edit:"Modifier / compléter", save:"Enregistrer", saving:"Enregistrement …", cancel:"Annuler", remove:"Retirer", saved:"Enregistré ✓", uploading:"Envoi des photos",
       media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
-      lastW:"Semaine passée", thisW:"Cette semaine", nextW:"Semaine prochaine", nextNote:"Vous saisissez pour la semaine prochaine. Ces entrées paraîtront dans les Weekly Highlights de la S{w}.", lastNote:"Vous saisissez pour la semaine passée (S{w}).", kw:"S", refresh:"Actualiser", loading:"Chargement …", loadFail:"Impossible de charger les entrées. Essayez « Actualiser ».",
+      today:"Semaine en cours", archive:"Archives", nextNote:"Vous saisissez à l'avance – pour la S{w} ({n}). Ces entrées paraîtront dans les Weekly Highlights de cette semaine-là.", lastNote:"Vous consultez une semaine passée (S{w}). Les compléments restent possibles.", inWeeks:["dans 1 semaine","dans {n} semaines"], kw:"S", refresh:"Actualiser", loading:"Chargement …", loadFail:"Impossible de charger les entrées. Essayez « Actualiser ».",
       updated:"Mis à jour", entries:["entrée","entrées"], changed:"modifié", added:"créé", justNow:"à l'instant", minAgo:"il y a {n} min", hAgo:"il y a {n} h",
       empty:"Saisissez d'abord quelque chose.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par entrée.",
       saveFail:"L'enregistrement n'a pas abouti. Réessayez.", conflict:"Quelqu'un vient de modifier cette entrée. La nouvelle version s'affiche – ajoutez à nouveau votre complément.",
@@ -319,8 +325,10 @@ function render(){
   document.documentElement.lang=lang;
   ["script","hero","heroSub"].forEach(k=>$("t-"+k).textContent=tr(k));
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
-  document.querySelectorAll(".wk button").forEach(b=>{ const o=+b.dataset.o; b.textContent=o===1?tr("lastW"):o===0?tr("thisW"):tr("nextW"); b.setAttribute("aria-pressed",o===offset); });
-  const wn=$("weekNote"); wn.hidden=offset===0; wn.textContent=offset<0?tr("nextNote").replace("{w}",W.week):tr("lastNote").replace("{w}",W.week);
+  $("wkToday").hidden=offset===0; $("wkToday").textContent=tr("today"); $("wkNext").disabled=offset<=-MAX_AHEAD; $("archLink").textContent="🗂 "+tr("archive");
+  const ahead=-offset, iw=T[lang].inWeeks;
+  const wn=$("weekNote"); wn.hidden=offset===0;
+  wn.textContent=offset<0?tr("nextNote").replace("{w}",W.week).replace("{n}",(ahead===1?iw[0]:iw[1]).replace("{n}",ahead)):tr("lastNote").replace("{w}",W.week);
   $("langDE").setAttribute("aria-pressed",lang==="de"); $("langFR").setAttribute("aria-pressed",lang==="fr");
   $("refreshBtn").textContent="↻ "+tr("refresh");
   $("liveInfo").textContent=loadError?tr("loadFail"):!loadedAt?tr("loading"):items.length+" "+tr("entries")[items.length===1?0:1]+" · "+tr("updated")+" "+loadedAt.toLocaleTimeString(lang==="fr"?"fr-CH":"de-CH",{hour:"2-digit",minute:"2-digit"});
@@ -413,7 +421,10 @@ let toastTimer;
 function toast(msg,kind){ const t=$("toast"); t.textContent=msg; t.className="toast"+(kind?" "+kind:""); t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.hidden=true,3500); }
 
 $("refreshBtn").onclick=()=>{ if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } load(); };
-document.querySelectorAll(".wk button").forEach(b=>b.onclick=()=>{ const o=+b.dataset.o; if(o===offset) return; if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } offset=o; W=weekInfo(offset); items=[]; loadedAt=null; render(); load(); });
+function goWeek(o){ if(o===offset||o< -MAX_AHEAD) return; if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } offset=o; W=weekInfo(offset); items=[]; loadedAt=null; render(); load(); }
+$("wkPrev").onclick=()=>goWeek(offset+1);
+$("wkNext").onclick=()=>goWeek(offset-1);
+$("wkToday").onclick=()=>goWeek(0);
 $("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
 $("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
 window.addEventListener("beforeunload",ev=>{ if(isDirty()){ ev.preventDefault(); ev.returnValue=""; } });

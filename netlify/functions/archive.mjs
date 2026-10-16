@@ -1,4 +1,4 @@
-// Password-protected archive of sent weekly mails, one per ISO week.
+// Archive of sent weekly mails, one per ISO week. Read: everyone; write: password.
 // GET → list · GET ?week=YYYY-Www → one mail · POST {week, subject, html, text, method} → save (replaces that week's copy)
 import { getStore } from "@netlify/blobs";
 
@@ -11,8 +11,11 @@ function same(a, b) {
 const WEEK = /^\d{4}-W\d{2}$/;
 
 export default async (req) => {
-  const expected = Netlify.env.get("ADMIN_PASSWORD");
-  if (!expected || !same(req.headers.get("x-admin-password") || "", expected)) return Response.json({ error: "password" }, { status: 401 });
+  // Reading the archive is open to the team; saving needs Astrid's password.
+  if (req.method !== "GET") {
+    const expected = Netlify.env.get("ADMIN_PASSWORD");
+    if (!expected || !same(req.headers.get("x-admin-password") || "", expected)) return Response.json({ error: "password" }, { status: 401 });
+  }
   const s = getStore({ name: "wh-archive", consistency: "strong" });
   const url = new URL(req.url);
 
@@ -21,13 +24,15 @@ export default async (req) => {
     if (week) {
       if (!WEEK.test(week)) return Response.json({ error: "week" }, { status: 400 });
       const m = await s.get(week, { type: "json" });
-      return m ? Response.json(m) : Response.json({ error: "none" }, { status: 404 });
+      if (!m) return Response.json({ error: "none" }, { status: 404 });
+      const { to, ...pub } = m;   // the recipient address stays private
+      return Response.json(pub, { headers: { "cache-control": "no-store" } });
     }
     const { blobs } = await s.list();
     const list = [];
     for (const b of blobs) {
       const meta = await s.getMetadata(b.key);
-      if (meta) list.push({ week: b.key, ...(meta.metadata || {}) });
+      if (meta) { const { to, ...pub } = meta.metadata || {}; list.push({ week: b.key, ...pub }); }
     }
     list.sort((a, b) => b.week.localeCompare(a.week));
     return Response.json({ list }, { headers: { "cache-control": "no-store" } });

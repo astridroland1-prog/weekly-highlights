@@ -185,7 +185,7 @@ async function api(method,query){
 }
 async function load(){
   const W=weekInfo(); CUR=W; leaveArchive(false);
-  $("wkLabel").textContent="KW "+W.week; $("wkRange").textContent=W.range; $("nextW").disabled=offset<=-1;
+  $("wkLabel").textContent="KW "+W.week; $("wkRange").textContent=W.range; $("nextW").disabled=offset<=-26;
   $("subject").textContent="Weekly Highlights KW "+W.week;
   setStatus("status","Chargement …");
   try{
@@ -397,7 +397,7 @@ $("copySubject").onclick=async ()=>{ try{ await navigator.clipboard.writeText($(
 $("rebuild").onclick=()=>{ buildMail(); setStatus("copyStatus","Mail régénéré à partir des contributions.","ok"); };
 $("reload").onclick=load;
 $("prevW").onclick=()=>{ offset++; load(); };
-$("nextW").onclick=()=>{ if(offset>-1){ offset--; load(); } };
+$("nextW").onclick=()=>{ if(offset>-26){ offset--; load(); } };
 $("loginForm").onsubmit=async e=>{
   e.preventDefault();
   PW=$("pw").value.trim(); if(!PW) return;

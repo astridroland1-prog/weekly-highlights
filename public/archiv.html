@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Weekly Highlights – Archiv</title>
+<link rel="icon" href="/assets/logo.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: brand band; list of sent weekly mails on the left, the selected mail on the right. */
+:root{
+  --brand:#000B72; --brand-soft:#E9EBF7;
+  --bg:#F3F4F9; --card:#FFFFFF; --ink:#111633; --muted:#5B6180; --line:#DDE0EE; --field:#F8F9FC;
+  --gold:#B1934B;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --brand-soft:#1A1F45; --bg:#0B0E24; --card:#141936; --ink:#E8EAF6; --muted:#A0A6C4; --line:#272E55; --field:#10142E; --gold:#D2B46B; color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:500 15px var(--body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer}
+button:hover{border-color:var(--brand)}
+:is(button,a):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.band{background:linear-gradient(180deg,rgba(0,11,114,.35),rgba(0,11,114,.7)),#000B72 url("/assets/pattern.jpg") center/cover;color:#fff;border-bottom:4px solid #B1934B}
+.band .wrap{padding-block:16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:46px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.brand b{display:block;font:700 26px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.brand span{font:600 12px var(--display);letter-spacing:.2em;text-transform:uppercase;color:#E7D3A4}
+.band a{color:#fff;font-size:14px;font-weight:600;background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;text-decoration:none}
+.band a:hover{background:rgba(0,5,50,.8)}
+main.wrap{padding-block:24px 60px}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.app{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px}
+.card h2{font:700 20px var(--display);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--brand)}
+@media (prefers-color-scheme:dark){.card h2{color:#AFB7FF}}
+.muted{color:var(--muted);font-size:14px;margin:0}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:70vh;overflow:auto}
+.list button{width:100%;text-align:left;display:grid;gap:2px;background:var(--field)}
+.list button b{font:700 18px var(--display);letter-spacing:.04em}
+.list button span{font-size:13px;color:var(--muted)}
+.list button[aria-current="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.head{display:grid;gap:2px}
+.head b{font-size:17px}
+.paperwrap{background:#fff;overflow-x:auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,8,80,.10);border:1px solid var(--line)}
+.paper{background:#fff;color:#000;padding:36px 40px;min-height:300px;max-width:760px}
+.paper img{max-width:100%;height:auto}
+.placeholder{color:#7a7f99;text-align:center;padding:60px 20px;font-family:var(--body)}
+</style>
+</head>
+<body>
+<div class="band"><div class="wrap">
+  <div class="brand"><img src="/assets/logo.png" alt="Feldschlösschen"><div><b>Weekly Highlights</b><span>Archiv · Archives</span></div></div>
+  <a href="/">← Zum Formular / Formulaire</a>
+</div></div>
+<main class="wrap">
+  <div class="app">
+    <aside class="card">
+      <h2>Versendete Ausgaben</h2>
+      <p class="muted">Alle Weekly Highlights, die Astrid verschickt hat. · Toutes les éditions envoyées.</p>
+      <ul class="list" id="list"><li class="muted">Lädt … / Chargement …</li></ul>
+    </aside>
+    <section style="display:grid;gap:12px;min-width:0">
+      <div class="head" id="head"></div>
+      <div class="paperwrap"><div class="paper" id="mail"><div class="placeholder">Ausgabe links auswählen · Choisissez une édition à gauche.</div></div></div>
+    </section>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let LIST=[], current=null;
+const fmt=iso=>{ const d=new Date(iso); return d.toLocaleDateString("de-CH",{weekday:"short",day:"numeric",month:"numeric",year:"numeric"}); };
+const kw=w=>"KW "+parseInt(w.split("-W")[1],10)+" · "+w.slice(0,4);
+function renderList(){
+  const ul=$("list"); ul.innerHTML="";
+  if(!LIST.length){ const li=document.createElement("li"); li.className="muted"; li.textContent="Noch keine Ausgabe versendet. · Aucune édition envoyée pour l'instant."; ul.append(li); return; }
+  LIST.forEach(a=>{
+    const li=document.createElement("li"), b=document.createElement("button"); b.type="button";
+    const t=document.createElement("b"); t.textContent=kw(a.week);
+    const d=document.createElement("span"); d.textContent="Versendet am "+fmt(a.sentAt);
+    b.append(t,d); b.setAttribute("aria-current",current===a.week); b.onclick=()=>open(a.week);
+    li.append(b); ul.append(li);
+  });
+}
+async function open(week){
+  current=week; renderList();
+  try{
+    const r=await fetch("/api/archive?week="+encodeURIComponent(week),{cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const a=await r.json();
+    const h=$("head"); h.innerHTML=""; const b=document.createElement("b"); b.textContent=a.subject||kw(week);
+    const s=document.createElement("span"); s.className="muted"; s.textContent="Versendet am "+fmt(a.sentAt)+" · envoyée le "+new Date(a.sentAt).toLocaleDateString("fr-CH");
+    h.append(b,s);
+    $("mail").innerHTML=a.html;
+    $("mail").querySelectorAll("a").forEach(x=>{ x.target="_blank"; x.rel="noopener"; });
+    try{ history.replaceState(null,"","#"+week); }catch(e){}
+  }catch(e){ $("mail").innerHTML='<div class="placeholder">Diese Ausgabe konnte nicht geladen werden. · Impossible de charger cette édition.</div>'; }
+}
+(async()=>{
+  try{ const r=await fetch("/api/archive",{cache:"no-store"}); if(r.ok) LIST=(await r.json()).list||[]; }catch(e){}
+  renderList();
+  const want=(location.hash||"").slice(1);
+  const first=LIST.find(a=>a.week===want)||LIST[0];
+  if(first) open(first.week);
+})();
+</script>
+</body>
+</html>

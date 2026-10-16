@@ -6,6 +6,7 @@ Outil en deux parties pour préparer le mail hebdomadaire « Weekly Highlights �
 |---|---|---|
 | Formulaire | l'équipe | https://feldschloesschen-weekly-highlights.netlify.app/ |
 | Compilation | Astrid (mot de passe) | https://feldschloesschen-weekly-highlights.netlify.app/zusammenstellen |
+| Archives | toute l'équipe (lecture) | https://feldschloesschen-weekly-highlights.netlify.app/archiv |
 
 ## Fonctionnement
 1. Le formulaire est un tableau commun de la semaine (DE/FR) : chacun voit ce qui est déjà saisi, complète une entrée existante (« Bearbeiten / ergänzen ») ou en ajoute une nouvelle. Chaque entrée est enregistrée séparément ; un avertissement signale un sujet semblable déjà présent, et une modification simultanée par deux personnes est détectée.
