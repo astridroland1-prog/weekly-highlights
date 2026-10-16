@@ -56,7 +56,7 @@ button:disabled{opacity:.55;cursor:wait}
 .hero p{margin:10px 0 0;color:#E4E7F7;text-shadow:0 1px 8px rgba(0,0,40,.6)}
 
 /* Sections */
-main.wrap{padding-block:26px 140px;display:grid;gap:22px}
+main.wrap{padding-block:22px 60px;display:grid;gap:22px}
 .sec{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .sec > header{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--line)}
 .num{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font:700 19px var(--display);flex:none}
@@ -112,6 +112,31 @@ textarea{resize:vertical;min-height:110px}
 .footer{text-align:center;font:28px var(--script);color:var(--brand)}
 @media (prefers-color-scheme:dark){.footer{color:#AFB7FF}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Shared board */
+.entry{padding:16px 20px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+.entry:last-child{border-bottom:0}
+.entry h3{margin:0;font-size:17px;line-height:1.35;display:flex;gap:8px;align-items:baseline}
+.entry h3::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);flex:none;transform:translateY(-2px)}
+.entry .txt{margin:0;color:var(--ink);white-space:pre-line;font-size:15px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.entry .minis{display:flex;gap:6px;flex-wrap:wrap}
+.entry .minis img,.entry .minis span{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--brand-soft);display:grid;place-items:center;font-size:11px;color:var(--brand)}
+.entry .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.entry.line{grid-template-columns:1fr auto;align-items:center;padding-block:10px}
+.entry.line h3{font-weight:500;font-size:16px}
+.entry.line .foot{display:contents}
+.edit{background:var(--brand-soft);border-radius:0}
+.edit .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hint{background:#FFF6E0;color:#6B4E00;border:1px solid #EBD38F;border-radius:10px;padding:10px 12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media (prefers-color-scheme:dark){.hint{background:#3A2E0E;color:#F3DFA6;border-color:#6B5520}}
+.hint button{padding:4px 10px;font-size:13px}
+.empty-sec{padding:16px 20px;color:var(--muted);font-size:15px;border-bottom:1px solid var(--line)}
+.link-btn{background:transparent;border:0;color:var(--brand);font-weight:600;font-size:14px;padding:4px 6px}
+@media (prefers-color-scheme:dark){.link-btn{color:#AFB7FF}}
+.link-btn:hover{text-decoration:underline}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:9;max-width:calc(100% - 32px)}
+.toast.err{background:var(--red);color:#fff}
+.livebar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -131,62 +156,55 @@ textarea{resize:vertical;min-height:110px}
 </div></div>
 
 <main class="wrap">
-  <div id="formArea" style="display:grid;gap:22px"><div id="sections" style="display:grid;gap:22px"></div></div>
-  <div class="done" id="doneBox" hidden>
-    <h2 id="t-doneTitle"></h2>
-    <p id="t-doneText"></p>
-    <button id="againBtn" type="button"></button>
-  </div>
+  <div class="livebar"><span id="liveInfo"></span><button class="link-btn" id="refreshBtn" type="button"></button></div>
+  <div id="sections" style="display:grid;gap:22px"></div>
   <div class="footer">Merci &amp; Proscht!</div>
 </main>
-
-<div class="sendbar" id="sendbar"><div class="wrap">
-  <div class="sum"><b id="sumLine"></b><span id="subLine"></span></div>
-  <button class="ghost" id="resetBtn" type="button"></button>
-  <button class="primary" id="sendBtn" type="button"></button>
-</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 const RECIPIENT_NAME = "Astrid";
 const MAX_FILE = 4.4*1024*1024;   // per file (server limit)
-const MAX_FILES = 10;             // per contribution
+const MAX_FILES = 10;             // per entry
 const MAX_SIDE = 1400;            // photos are shrunk to this many pixels on their long side
+const POLL_MS = 30000;            // refresh the board while nobody is editing
 
 const PARTS = [
-  {id:"highlight", fields:["title","detail","next","link"], media:true,
-   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Block pro Thema.", title:"Titel", titlePh:"Eine Runde auf uns in der Gastro – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Im McArthur's Pub in Lenzburg fand bereits die sechste Runde unserer Gastro-Aktion statt …", next:"Nächster Termin", nextPh:"Nächster und letzter Halt: Delémont am 10.09.", link:"Link zu längerem Video", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"optional", add:"Weiteres Highlight", item:"Highlight"},
-   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un bloc par sujet.", title:"Titre", titlePh:"Une tournée offerte en gastro – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"La sixième étape de notre action gastro a eu lieu au McArthur's Pub de Lenzburg …", next:"Prochaine date", nextPh:"Prochaine et dernière étape : Delémont le 10.09.", link:"Lien vers une vidéo plus longue", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"facultatif", add:"Ajouter un temps fort", item:"Temps fort"}},
-  {id:"outlook", fields:["title"], compact:true,
-   de:{name:"Ausblick nächste Woche", hint:"Was steht an? Eine Zeile pro Punkt.", title:"Punkt", titlePh:"OLMA-Vorbereitungen", add:"Weiterer Punkt", item:"Punkt"},
-   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne par point.", title:"Point", titlePh:"Préparatifs OLMA", add:"Ajouter un point", item:"Point"}},
+  {id:"highlight", fields:["title","detail","link"], media:true,
+   de:{name:"Highlights der Woche", hint:"Ein Eintrag pro Thema. Schau zuerst, ob dein Thema schon da ist – dann ergänze es.", title:"Titel", titlePh:"Eine Runde auf uns in der Gastro – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Im McArthur's Pub in Lenzburg fand bereits die sechste Runde unserer Gastro-Aktion statt …", link:"Link zu längerem Video", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"optional", add:"Neues Highlight", none:"Noch keine Highlights für diese Woche."},
+   fr:{name:"Les temps forts de la semaine", hint:"Un bloc par sujet. Vérifiez d'abord si votre sujet existe déjà – dans ce cas, complétez-le.", title:"Titre", titlePh:"Une tournée offerte en gastro – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"La sixième étape de notre action gastro a eu lieu au McArthur's Pub de Lenzburg …", link:"Lien vers une vidéo plus longue", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"facultatif", add:"Nouveau temps fort", none:"Aucun temps fort pour cette semaine."}},
+  {id:"outlook", fields:["title"], line:true,
+   de:{name:"Ausblick nächste Woche", hint:"Eine Zeile pro Punkt.", title:"Punkt", titlePh:"OLMA-Vorbereitungen", add:"Neuer Punkt", none:"Noch keine Punkte."},
+   fr:{name:"La semaine prochaine", hint:"Une ligne par point.", title:"Point", titlePh:"Préparatifs OLMA", add:"Nouveau point", none:"Aucun point pour l'instant."}},
   {id:"team", fields:["title","detail"],
-   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", add:"Weitere Team-News", item:"Team-News"},
-   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", add:"Ajouter une nouvelle", item:"Nouvelle"}}
+   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", opt:"optional", add:"Neue Team-News", none:"Noch keine Team-News."},
+   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", opt:"facultatif", add:"Nouvelle nouvelle", none:"Aucune nouvelle pour l'instant."}}
 ];
 const T = {
-  de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Trag deine Punkte ein und häng Fotos an. "+RECIPIENT_NAME+" macht daraus die Weekly Highlights fürs ganze Marketing.",
-      send:"Senden", sending:"Wird gesendet …", uploading:"Fotos werden hochgeladen", reset:"Leeren", confirmReset:"Wirklich leeren?", remove:"Entfernen",
+  de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Hier seht ihr alles, was das Team schon eingetragen hat. Ergänzt bestehende Einträge oder fügt neue hinzu – "+RECIPIENT_NAME+" macht daraus die Weekly Highlights.",
+      edit:"Bearbeiten / ergänzen", save:"Speichern", saving:"Wird gespeichert …", cancel:"Abbrechen", remove:"Entfernen", saved:"Gespeichert ✓", uploading:"Fotos werden hochgeladen",
       media:"Fotos und Videos", drop:"Fotos oder Videos hinzufügen", dropSub:"klicken oder hierher ziehen", tooBig:"zu gross", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15 Sek.) – längere bitte als Link.",
-      lastW:"Letzte Woche?", thisW:"Diese Woche", kw:"KW",
-      nothing:"Noch nichts eingetragen", hl:["Highlight","Highlights"], ol:["Ausblick","Ausblick-Punkte"], tm:["Team-News","Team-News"], ph:["Foto/Video","Fotos/Videos"],
-      empty:"Du hast noch nichts eingetragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
-      sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen – deine Eingaben sind gespeichert.", saved:"Entwurf gespeichert",
-      doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Weiteren Beitrag erfassen"},
-  fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Saisissez vos points et ajoutez des photos. "+RECIPIENT_NAME+" en fera les Weekly Highlights pour tout le marketing.",
-      send:"Envoyer", sending:"Envoi en cours …", uploading:"Envoi des photos", reset:"Effacer", confirmReset:"Vraiment effacer ?", remove:"Retirer",
+      lastW:"Letzte Woche?", thisW:"Diese Woche", kw:"KW", refresh:"Aktualisieren", loading:"Lädt …", loadFail:"Einträge konnten nicht geladen werden. «Aktualisieren» versuchen.",
+      updated:"Stand", entries:["Eintrag","Einträge"], changed:"geändert", added:"erstellt", justNow:"gerade eben", minAgo:"vor {n} Min.", hAgo:"vor {n} Std.",
+      empty:"Bitte zuerst etwas eintragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Eintrag.",
+      saveFail:"Speichern hat nicht geklappt. Bitte nochmals versuchen.", conflict:"Jemand hat diesen Eintrag gerade geändert. Die neue Version wird angezeigt – bitte deine Ergänzung nochmals einfügen.",
+      similar:"Ähnlicher Eintrag schon vorhanden:", useIt:"Diesen ergänzen", unsaved:"Ungespeicherte Änderungen gehen verloren. Trotzdem schliessen?", photos:"Fotos"},
+  fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Vous voyez ici tout ce que l'équipe a déjà saisi. Complétez les entrées existantes ou ajoutez-en de nouvelles – "+RECIPIENT_NAME+" en fera les Weekly Highlights.",
+      edit:"Modifier / compléter", save:"Enregistrer", saving:"Enregistrement …", cancel:"Annuler", remove:"Retirer", saved:"Enregistré ✓", uploading:"Envoi des photos",
       media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
-      lastW:"Semaine passée ?", thisW:"Cette semaine", kw:"S",
-      nothing:"Rien de saisi pour l'instant", hl:["temps fort","temps forts"], ol:["point à venir","points à venir"], tm:["nouvelle","nouvelles"], ph:["photo/vidéo","photos/vidéos"],
-      empty:"Vous n'avez encore rien saisi.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
-      sendFail:"L'envoi n'a pas abouti. Réessayez – votre saisie est conservée.", saved:"Brouillon enregistré",
-      doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une autre contribution"}
+      lastW:"Semaine passée ?", thisW:"Cette semaine", kw:"S", refresh:"Actualiser", loading:"Chargement …", loadFail:"Impossible de charger les entrées. Essayez « Actualiser ».",
+      updated:"Mis à jour", entries:["entrée","entrées"], changed:"modifié", added:"créé", justNow:"à l'instant", minAgo:"il y a {n} min", hAgo:"il y a {n} h",
+      empty:"Saisissez d'abord quelque chose.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par entrée.",
+      saveFail:"L'enregistrement n'a pas abouti. Réessayez.", conflict:"Quelqu'un vient de modifier cette entrée. La nouvelle version s'affiche – ajoutez à nouveau votre complément.",
+      similar:"Une entrée semblable existe déjà :", useIt:"Compléter celle-ci", unsaved:"", photos:"photos"}
 };
 
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let lang=store.get("whb-lang")||((navigator.language||"").toLowerCase().startsWith("fr")?"fr":"de");
 const tr=k=>T[lang][k];
-const plural=(n,k)=>n+" "+T[lang][k][n===1?0:1];
+const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
+const mb=b=>(b/1048576).toLocaleString(lang==="fr"?"fr-CH":"de-CH",{maximumFractionDigits:1})+" MB";
 
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return{y,w:Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)};}
@@ -198,16 +216,39 @@ function weekInfo(offset){
 }
 let offset=0, W=weekInfo(0);
 
-const FILES=new WeakMap();            // item -> files (kept in memory only)
-const filesOf=it=>{ if(!FILES.has(it)) FILES.set(it,[]); return FILES.get(it); };
-const mb=b=>(b/1048576).toLocaleString(lang==="fr"?"fr-CH":"de-CH",{maximumFractionDigits:1})+" MB";
-const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
+// ---------- State ----------
+let items=[];             // entries of the week, from the server
+let loadedAt=null, loadError=false;
+let editing=null;         // {section, id|null, draft:{title,detail,link}, media:[{key?,kind,name,url,blob?}], busy, msg}
+const ago=iso=>{ const m=Math.round((Date.now()-new Date(iso))/60000); if(m<1) return tr("justNow"); if(m<60) return tr("minAgo").replace("{n}",m); return tr("hAgo").replace("{n}",Math.round(m/60)); };
+const mediaUrl=k=>"/api/media/"+k;
 
-const blank=()=>({highlight:[{}],outlook:[{}],team:[{}]});
-function loadDraft(){ try{ const s=JSON.parse(store.get("whb-draft")||"null"); if(s&&s.week===W.key&&s.items) return s.items; }catch(e){} return blank(); }
-let state=loadDraft();
-let savedFlash=0;
-function save(){ store.set("whb-draft",JSON.stringify({week:W.key,items:state})); savedFlash=Date.now(); updateBar(); setTimeout(updateBar,2600); }
+async function load(){
+  if(editing) return;
+  try{
+    const r=await fetch("/api/items?week="+encodeURIComponent(W.key),{cache:"no-store"});
+    if(!r.ok) throw 0;
+    items=(await r.json()).items||[]; loadedAt=new Date(); loadError=false;
+  }catch(e){ loadError=true; }
+  render();
+}
+setInterval(()=>{ if(!editing && document.visibilityState==="visible") load(); },POLL_MS);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && !editing) load(); });
+
+// ---------- Editing ----------
+function startEdit(section,item){
+  if(editing && isDirty() && !confirmLeave()) return;
+  editing={section, id:item?item.id:null, etag:item?item.etag:null,
+    draft:{title:item?.title||"", detail:item?.detail||"", link:item?.link||""},
+    orig:JSON.stringify({title:item?.title||"",detail:item?.detail||"",link:item?.link||"",m:(item?.media||[]).map(m=>m.key)}),
+    media:(item?.media||[]).map(m=>({...m,url:m.kind==="img"?mediaUrl(m.key):""})), busy:false, msg:""};
+  render();
+  const el=$("ed-title"); if(el){ el.focus(); el.scrollIntoView({block:"center",behavior:"smooth"}); }
+}
+function isDirty(){ if(!editing) return false; const d=editing.draft; return JSON.stringify({title:d.title,detail:d.detail,link:d.link,m:editing.media.map(m=>m.key||m.url)})!==editing.orig; }
+let leaveArm=0;
+function confirmLeave(){ if(Date.now()-leaveArm<4000) return true; leaveArm=Date.now(); toast(lang==="fr"?"Modifications non enregistrées – cliquez encore pour fermer.":"Ungespeicherte Änderungen – nochmals klicken zum Schliessen.","err"); return false; }
+function stopEdit(){ editing.media.forEach(m=>m.blob&&m.url&&URL.revokeObjectURL(m.url)); editing=null; render(); load(); }
 
 async function shrink(file){
   if(!file.type.startsWith("image/") || /gif|svg/.test(file.type)) return {name:file.name, blob:file, kind:file.type.startsWith("video/")?"vid":"img"};
@@ -221,145 +262,159 @@ async function shrink(file){
   }catch(e){}
   return {name:file.name, blob:file, kind:"img"};
 }
-async function addFiles(it,list){
+async function addFiles(list){
   for(const f of list){
     if(!/^(image|video)\//.test(f.type)) continue;
-    if(allFiles().length>=MAX_FILES){ setStatus(tr("tooMany"),"err"); break; }
-    const p=await shrink(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; filesOf(it).push(p);
+    if(editing.media.length>=MAX_FILES){ editing.msg=tr("tooMany"); break; }
+    const p=await shrink(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; editing.media.push(p);
   }
   render();
 }
-function allFiles(){ const out=[]; state.highlight.forEach(it=>filesOf(it).forEach(f=>out.push(f))); return out; }
+async function upload(m){
+  const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":m.blob.type||"application/octet-stream","x-filename":encodeURIComponent(m.name)},body:m.blob});
+  if(!res.ok) throw new Error("upload");
+  return (await res.json()).key;
+}
+async function saveEdit(){
+  const e=editing, d=e.draft;
+  if(!clean(d.title) && !clean(d.detail) && !e.media.length){ e.msg=tr("empty"); render(); return; }
+  if(e.media.some(m=>m.blob && m.blob.size>MAX_FILE)){ e.msg=tr("fileTooBig"); render(); return; }
+  e.busy=true; e.msg=""; render();
+  try{
+    const news=e.media.filter(m=>!m.key);
+    for(let i=0;i<news.length;i++){ e.msg=tr("uploading")+" "+(i+1)+"/"+news.length+" …"; render(); news[i].key=await upload(news[i]); }
+    const payload={title:clean(d.title),detail:clean(d.detail),link:clean(d.link),media:e.media.map(m=>({key:m.key,kind:m.kind,name:m.name}))};
+    let res;
+    if(e.id) res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"PUT",headers:{"content-type":"application/json","if-match":e.etag||""},body:JSON.stringify(payload)});
+    else res=await fetch("/api/items",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...payload,week:W.key,section:e.section})});
+    if(res.status===409){
+      const j=await res.json(); const fresh=j.item;
+      if(fresh){ items=items.map(x=>x.id===fresh.id?fresh:x); e.etag=fresh.etag; e.draft={title:fresh.title||"",detail:fresh.detail||"",link:fresh.link||""};
+        e.media=(fresh.media||[]).map(m=>({...m,url:m.kind==="img"?mediaUrl(m.key):""})); }
+      e.busy=false; e.msg=tr("conflict"); render(); return;
+    }
+    if(!res.ok) throw new Error("save");
+    e.media.forEach(m=>m.blob&&m.url&&URL.revokeObjectURL(m.url));
+    editing=null; toast(tr("saved")); await load();
+  }catch(err){ e.busy=false; e.msg=tr("saveFail"); render(); }
+}
 
+// Similar title check for new entries (shared words of 4+ letters).
+const words=s=>new Set((s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").split(/[^a-z0-9]+/).filter(w=>w.length>=4));
+function similarTo(section,title){
+  const a=words(title); if(a.size<1) return null;
+  let best=null,score=0;
+  items.filter(i=>i.section===section).forEach(i=>{ const b=words(i.title+" "+(i.detail||"").slice(0,200)); let n=0; a.forEach(w=>{ if(b.has(w)) n++; }); const s=n/a.size; if(s>score){ score=s; best=i; } });
+  return score>=0.5?best:null;
+}
+
+// ---------- Rendering ----------
 const ICON_UP='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>';
+function el(tag,cls,text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 
 function render(){
   document.documentElement.lang=lang;
-  ["script","hero","heroSub","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
-  $("againBtn").textContent=tr("again"); $("sendBtn").textContent=tr("send");
+  ["script","hero","heroSub"].forEach(k=>$("t-"+k).textContent=tr(k));
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
   $("wkToggle").textContent=offset===0?tr("lastW"):tr("thisW");
   $("langDE").setAttribute("aria-pressed",lang==="de"); $("langFR").setAttribute("aria-pressed",lang==="fr");
-  resetArm(false);
+  $("refreshBtn").textContent="↻ "+tr("refresh");
+  $("liveInfo").textContent=loadError?tr("loadFail"):!loadedAt?tr("loading"):items.length+" "+tr("entries")[items.length===1?0:1]+" · "+tr("updated")+" "+loadedAt.toLocaleTimeString(lang==="fr"?"fr-CH":"de-CH",{hour:"2-digit",minute:"2-digit"});
   const box=$("sections"); box.innerHTML="";
   PARTS.forEach((p,pi)=>{
     const L=p[lang];
-    const sec=document.createElement("section"); sec.className="sec"+(p.compact?" compact":"");
+    const sec=el("section","sec");
     sec.innerHTML='<header><span class="num">'+(pi+1)+'</span><div><h2></h2><p></p></div></header><div class="items"></div><footer></footer>';
     sec.querySelector("h2").textContent=L.name; sec.querySelector("header p").textContent=L.hint;
-    const items=sec.querySelector(".items");
-    state[p.id].forEach((it,ix)=>{
-      const card=document.createElement("div"); card.className="item";
-      const head=document.createElement("div"); head.className="item-head";
-      const lbl=document.createElement("span"); lbl.textContent=L.item+" "+(ix+1); head.append(lbl);
-      const rm=document.createElement("button"); rm.className="ghost"; rm.type="button"; rm.textContent=tr("remove");
-      rm.onclick=()=>{ filesOf(it).forEach(f=>f.url&&URL.revokeObjectURL(f.url)); state[p.id].splice(ix,1); if(!state[p.id].length) state[p.id].push({}); save(); render(); };
-      if(!p.compact){ if(state[p.id].length>1) head.append(rm); card.append(head); }
-      const mk=(f,multi,optional)=>{ const l=document.createElement("label"); const s=document.createElement("span"); s.textContent=L[f];
-        if(optional){ const o=document.createElement("small"); o.textContent=" · "+L.opt; s.append(o); } l.append(s);
-        const el=document.createElement(multi?"textarea":"input"); el.placeholder=L[f+"Ph"]||""; el.value=it[f]||""; el.id=p.id+"-"+ix+"-"+f;
-        el.addEventListener("input",()=>{ it[f]=el.value; save(); }); l.append(el); return l; };
-      if(p.fields.includes("title")) card.append(mk("title"));
-      if(p.fields.includes("detail")) card.append(mk("detail",true));
-      if(p.media) card.append(mediaBlock(it,p.id+"-"+ix));
-      if(p.fields.includes("next")){ const r=document.createElement("div"); r.className="row2"; r.append(mk("next",false,true),mk("link",false,true)); card.append(r); }
-      if(p.compact && state[p.id].length>1) card.append(rm);
-      items.append(card);
-    });
-    const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent="+ "+L.add;
-    add.onclick=()=>{ state[p.id].push({}); save(); render(); const el=$(p.id+"-"+(state[p.id].length-1)+"-title"); if(el) el.focus(); };
-    sec.querySelector("footer").append(add);
+    const list=sec.querySelector(".items");
+    const mine=items.filter(i=>i.section===p.id);
+    if(!mine.length && !(editing && editing.section===p.id)) list.append(el("div","empty-sec",L.none));
+    mine.forEach(it=>{ list.append(editing && editing.id===it.id ? editor(p,L) : view(p,L,it)); });
+    if(editing && editing.section===p.id && !editing.id) list.append(editor(p,L));
+    const add=el("button","add","+ "+L.add); add.type="button";
+    add.onclick=()=>startEdit(p.id,null);
+    if(!(editing && editing.section===p.id && !editing.id)) sec.querySelector("footer").append(add);
     box.append(sec);
   });
-  updateBar();
 }
-function mediaBlock(it,key){
-  const wrap=document.createElement("div"); wrap.className="media";
-  const head=document.createElement("span"); head.textContent=tr("media"); wrap.append(head);
-  const input=document.createElement("input"); input.type="file"; input.multiple=true; input.accept="image/*,video/*"; input.hidden=true; input.id=key+"-files";
-  input.onchange=()=>{ addFiles(it,[...input.files]); input.value=""; };
-  const fs=filesOf(it);
-  if(fs.length){
-    const list=document.createElement("ul"); list.className="thumbs";
-    fs.forEach((f,i)=>{
-      const big=f.blob.size>MAX_FILE;
-      const li=document.createElement("li"); if(big) li.className="bad";
-      let pic; if(f.url){ pic=document.createElement("img"); pic.src=f.url; pic.alt=""; } else { pic=document.createElement("div"); pic.textContent="▶ Video"; }
+function view(p,L,it){
+  const card=el("div","entry"+(p.line?" line":""));
+  card.append(el("h3","",it.title||(it.detail||"").split("\n")[0]));
+  if(!p.line && it.detail && it.title) card.append(el("p","txt",it.detail));
+  if(it.media && it.media.length){
+    const m=el("div","minis");
+    it.media.slice(0,6).forEach(x=>{ if(x.kind==="img"){ const i=document.createElement("img"); i.src=mediaUrl(x.key); i.alt=""; i.loading="lazy"; m.append(i); } else m.append(el("span","","▶")); });
+    if(it.media.length>6) m.append(el("span","","+"+(it.media.length-6)));
+    card.append(m);
+  }
+  const foot=el("div","foot");
+  if(!p.line) foot.append(el("span","",(it.updatedAt!==it.createdAt?tr("changed"):tr("added"))+" "+ago(it.updatedAt)));
+  const b=el("button","link-btn","✎ "+tr("edit")); b.type="button"; b.onclick=()=>startEdit(p.id,it);
+  foot.append(b); card.append(foot);
+  return card;
+}
+function editor(p,L){
+  const e=editing, card=el("div","item edit");
+  const mk=(f,multi,optional)=>{ const l=el("label"); const s=el("span","",L[f]); if(optional) s.append(el("small",""," · "+L.opt)); l.append(s);
+    const x=document.createElement(multi?"textarea":"input"); x.placeholder=L[f+"Ph"]||""; x.value=e.draft[f]||""; x.id="ed-"+f;
+    x.addEventListener("input",()=>{ e.draft[f]=x.value; if(f==="title"&&!e.id) showSimilar(); }); l.append(x); return l; };
+  card.append(mk("title"));
+  const simBox=el("div"); simBox.id="simBox"; card.append(simBox);
+  if(p.fields.includes("detail")) card.append(mk("detail",true,p.id==="team"));
+  if(p.media) card.append(mediaBlock());
+  if(p.fields.includes("link")) card.append(mk("link",false,true));
+  if(e.msg) card.append(el("p","status err",e.msg));
+  const act=el("div","actions");
+  const sv=el("button","primary",e.busy?tr("saving"):tr("save")); sv.type="button"; sv.disabled=e.busy; sv.onclick=saveEdit;
+  const cc=el("button","ghost",tr("cancel")); cc.type="button"; cc.disabled=e.busy; cc.onclick=()=>{ if(isDirty() && !confirmLeave()) return; stopEdit(); };
+  act.append(sv,cc); card.append(act);
+  setTimeout(()=>{ if(!e.id) showSimilar(); },0);
+  return card;
+}
+function showSimilar(){
+  const box=$("simBox"); if(!box||!editing) return; box.innerHTML="";
+  const s=similarTo(editing.section,editing.draft.title); if(!s) return;
+  const h=el("div","hint"); h.append(el("span","",tr("similar")+" «"+(s.title||"")+"»"));
+  const b=el("button","",tr("useIt")); b.type="button"; b.onclick=()=>{ editing=null; startEdit(s.section,s); };
+  h.append(b); box.append(h);
+}
+function mediaBlock(){
+  const e=editing, wrap=el("div","media");
+  wrap.append(el("span","",tr("media")));
+  const input=document.createElement("input"); input.type="file"; input.multiple=true; input.accept="image/*,video/*"; input.hidden=true; input.id="ed-files";
+  input.onchange=()=>{ addFiles([...input.files]); input.value=""; };
+  if(e.media.length){
+    const list=el("ul","thumbs");
+    e.media.forEach((f,i)=>{
+      const big=f.blob && f.blob.size>MAX_FILE;
+      const li=el("li",big?"bad":"");
+      let pic; if(f.url){ pic=document.createElement("img"); pic.src=f.url; pic.alt=""; } else pic=el("div","","▶ Video");
       pic.className="pic";
-      const cap=document.createElement("span"); cap.className="cap"; cap.textContent=big?tr("tooBig")+" · "+mb(f.blob.size):f.name; cap.title=f.name;
-      const x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="×"; x.setAttribute("aria-label",tr("remove")+" "+f.name);
-      x.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); fs.splice(i,1); render(); };
+      const cap=el("span","cap",big?tr("tooBig")+" · "+mb(f.blob.size):f.name); cap.title=f.name;
+      const x=el("button","x","×"); x.type="button"; x.setAttribute("aria-label",tr("remove")+" "+f.name);
+      x.onclick=()=>{ if(f.blob&&f.url) URL.revokeObjectURL(f.url); e.media.splice(i,1); render(); };
       li.append(pic,cap,x); list.append(li);
     });
     wrap.append(list);
   }
-  const drop=document.createElement("div"); drop.className="drop"; drop.tabIndex=0; drop.setAttribute("role","button");
+  const drop=el("div","drop"); drop.tabIndex=0; drop.setAttribute("role","button");
   drop.innerHTML=ICON_UP+'<span><b></b><br><small></small></span>'; drop.querySelector("b").textContent=tr("drop"); drop.querySelector("small").textContent=tr("dropSub");
-  drop.onclick=()=>input.click(); drop.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); input.click(); } };
-  drop.ondragover=e=>{ e.preventDefault(); drop.classList.add("over"); }; drop.ondragleave=()=>drop.classList.remove("over");
-  drop.ondrop=e=>{ e.preventDefault(); drop.classList.remove("over"); addFiles(it,[...e.dataTransfer.files]); };
-  const note=document.createElement("span"); note.className="note"; note.textContent=tr("photoNote");
-  wrap.append(input,drop,note);
+  drop.onclick=()=>input.click(); drop.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); input.click(); } };
+  drop.ondragover=ev=>{ ev.preventDefault(); drop.classList.add("over"); }; drop.ondragleave=()=>drop.classList.remove("over");
+  drop.ondrop=ev=>{ ev.preventDefault(); drop.classList.remove("over"); addFiles([...ev.dataTransfer.files]); };
+  wrap.append(input,drop,el("span","note",tr("photoNote")));
   return wrap;
 }
+let toastTimer;
+function toast(msg,kind){ const t=$("toast"); t.textContent=msg; t.className="toast"+(kind?" "+kind:""); t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.hidden=true,3500); }
 
-function counts(){
-  return {
-    hl: state.highlight.filter(i=>clean(i.title)||clean(i.detail)||filesOf(i).length).length,
-    ol: state.outlook.filter(i=>clean(i.title)).length,
-    tm: state.team.filter(i=>clean(i.title)||clean(i.detail)).length,
-    ph: allFiles().length
-  };
-}
-let statusMsg="", statusKind="";
-function setStatus(m,k){ statusMsg=m; statusKind=k||""; updateBar(); }
-function updateBar(){
-  const c=counts(), parts=[];
-  if(c.hl) parts.push(plural(c.hl,"hl")); if(c.ol) parts.push(plural(c.ol,"ol")); if(c.tm) parts.push(plural(c.tm,"tm")); if(c.ph) parts.push(plural(c.ph,"ph"));
-  $("sumLine").textContent=parts.length?parts.join(" · "):tr("nothing");
-  const sub=$("subLine");
-  if(statusMsg){ sub.textContent=statusMsg; sub.className="status"+(statusKind?" "+statusKind:""); }
-  else { sub.textContent=Date.now()-savedFlash<2500?tr("saved")+" ✓":tr("kw")+" "+W.week+" · "+W.range; sub.className=""; }
-}
-let armTimer;
-function resetArm(on){ const r=$("resetBtn"); clearTimeout(armTimer); r.dataset.arm=on?"1":""; r.textContent=on?tr("confirmReset"):tr("reset"); if(on) armTimer=setTimeout(()=>resetArm(false),4000); }
-$("resetBtn").onclick=()=>{
-  if(!$("resetBtn").dataset.arm){ resetArm(true); return; }
-  allFiles().forEach(f=>f.url&&URL.revokeObjectURL(f.url)); state=blank(); save(); setStatus(""); render();
-};
-
-async function upload(f){
-  const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":f.blob.type||"application/octet-stream","x-filename":encodeURIComponent(f.name)},body:f.blob});
-  if(!res.ok) throw new Error("upload "+res.status);
-  return (await res.json()).key;
-}
-$("sendBtn").onclick=async ()=>{
-  const c=counts();
-  if(!c.hl && !c.ol && !c.tm){ setStatus(tr("empty"),"err"); return; }
-  const files=allFiles();
-  if(files.length>MAX_FILES){ setStatus(tr("tooMany"),"err"); return; }
-  if(files.some(f=>f.blob.size>MAX_FILE)){ setStatus(tr("fileTooBig"),"err"); return; }
-  const btn=$("sendBtn"); btn.disabled=true; btn.textContent=tr("sending"); setStatus("");
-  try{
-    for(let i=0;i<files.length;i++){ if(!files[i].key){ setStatus(tr("uploading")+" "+(i+1)+"/"+files.length+" …"); files[i].key=await upload(files[i]); } }
-    const items={
-      highlight: state.highlight.map(i=>({title:clean(i.title),detail:clean(i.detail),next:clean(i.next),link:clean(i.link),media:filesOf(i).map(f=>({key:f.key,kind:f.kind,name:f.name}))})),
-      outlook: state.outlook.map(i=>({title:clean(i.title)})),
-      team: state.team.map(i=>({title:clean(i.title),detail:clean(i.detail)}))
-    };
-    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items})});
-    if(!res.ok) throw new Error("submit "+res.status);
-    files.forEach(f=>f.url&&URL.revokeObjectURL(f.url));
-    state=blank(); store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-    setStatus(""); $("formArea").hidden=true; $("sendbar").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
-  }catch(e){ setStatus(tr("sendFail"),"err"); }
-  finally{ btn.disabled=false; btn.textContent=tr("send"); }
-};
-$("againBtn").onclick=()=>{ $("doneBox").hidden=true; $("formArea").hidden=false; $("sendbar").hidden=false; render(); };
-$("wkToggle").onclick=()=>{ offset=offset?0:1; W=weekInfo(offset); state=loadDraft(); setStatus(""); render(); };
+$("refreshBtn").onclick=()=>{ if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } load(); };
+$("wkToggle").onclick=()=>{ if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } offset=offset?0:1; W=weekInfo(offset); items=[]; loadedAt=null; render(); load(); };
 $("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
 $("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
-render();
+window.addEventListener("beforeunload",ev=>{ if(isDirty()){ ev.preventDefault(); ev.returnValue=""; } });
+render(); load();
+
 </script>
 </body>
 </html>
