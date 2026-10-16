@@ -170,16 +170,19 @@ async function load(){
   $("subject").textContent="Weekly Highlights KW "+W.week;
   setStatus("status","Chargement …");
   try{
-    await api("GET","");                       // checks the password
-    const r=await fetch("/api/items?week="+encodeURIComponent(W.key),{cache:"no-store"});
-    if(!r.ok) throw new Error("http "+r.status);
+    // Password check: only a wrong password blocks the page; any other problem is shown but does not hide the entries.
+    let adminWarn="";
+    try{ await api("GET",""); }catch(err){ if(err.message==="password") throw err; adminWarn=" (Suppression indisponible : "+err.message+")"; }
+    const r=await fetch("/api/items?week="+encodeURIComponent(W.key)+"&t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("items "+r.status);
     entries=(await r.json()).items||[];
+    if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
     renderEntries(); buildMail();
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
-    setStatus("status","Chargement impossible. Vérifiez la connexion et cliquez sur « Actualiser ».","err");
+    setStatus("status","Chargement impossible ("+e.message+"). Cliquez sur « Actualiser ».","err");
     return false;
   }
 }
