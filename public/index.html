@@ -4,208 +4,189 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Weekly Highlights Marketing</title>
+<link rel="icon" href="/assets/logo.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Yellowtail&display=swap">
 <style>
-/* Layout: brand band with week badge, then one narrow column of three numbered sections and a send panel. */
+/* Layout: brand band (pattern + logo), three section cards, sticky send bar at the bottom. */
 :root{
-  --blue:#004993; --blue-soft:#E8EFF8;
-  --bg:#F2F5F9; --card:#FFFFFF; --ink:#0E1C30; --muted:#566377; --line:#D9E1EC; --field:#F7F9FC;
-  --gold:#B1934B; --red:#C0281A; --ok:#2F6B3F; --ok-soft:#E6F2E9;
-  --band-sub:#D7E3F3;
+  --brand:#000B72; --brand-hover:#00095A; --brand-soft:#E9EBF7;
+  --bg:#F3F4F9; --card:#FFFFFF; --ink:#111633; --muted:#5B6180; --line:#DDE0EE; --field:#F8F9FC;
+  --gold:#B1934B; --red:#D02A12; --ok:#2F6B3F; --ok-soft:#E7F2EA;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow","Segoe UI",Arial,sans-serif;
   --script:"Yellowtail","Brush Script MT",cursive;
-  --mono:Consolas,Menlo,monospace;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
-  --blue:#6FA3E0; --blue-soft:#16263B;
-  --bg:#0C1522; --card:#132033; --ink:#E6ECF4; --muted:#9AA8BB; --line:#26364C; --field:#0F1A2A;
-  --gold:#D2B46B; --red:#FF7A6B; --ok:#7CC48E; --ok-soft:#14301F; color-scheme:dark}}
+  --brand-soft:#1A1F45; --bg:#0B0E24; --card:#141936; --ink:#E8EAF6; --muted:#A0A6C4; --line:#272E55; --field:#10142E;
+  --gold:#D2B46B; --red:#FF7A66; --ok:#7CC48E; --ok-soft:#13301F; color-scheme:dark}}
 *{box-sizing:border-box}
-html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--body)}
 [hidden]{display:none!important}
-.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-button{font:600 15px var(--body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 16px;cursor:pointer}
-button:hover{border-color:var(--blue)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:600 15px var(--body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+button:hover{border-color:var(--brand)}
 button:disabled{opacity:.55;cursor:wait}
 :is(button,input,textarea,.drop):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-button.primary{background:#004993;border-color:#004993;color:#fff;font-size:17px;padding:12px 24px}
-button.primary:hover:not(:disabled){background:#00356B}
-button.link{border:0;background:none;padding:4px 6px;color:var(--muted);font-weight:500;font-size:14px}
-button.link:hover{color:var(--red);text-decoration:underline}
+.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-size:17px;padding:12px 28px}
+.primary:hover:not(:disabled){background:var(--brand-hover)}
+.ghost{background:transparent;border:0;color:var(--muted);font-weight:500;font-size:14px;padding:4px 6px}
+.ghost:hover{color:var(--red)}
 
-.band{background:#004993;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 14px,transparent 14px 28px),radial-gradient(circle at 85% -20%,rgba(231,211,164,.25),transparent 55%);color:#fff;border-bottom:4px solid #B1934B}
-.band .wrap{padding-block:22px 30px}
-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
-.brand h1{font:700 32px/1 var(--display);margin:0;letter-spacing:.06em;text-transform:uppercase}
-.brand p{margin:4px 0 0;font:600 13px var(--display);letter-spacing:.18em;text-transform:uppercase;color:#E7D3A4}
-.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.kw{background:rgba(0,30,70,.45);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:5px 14px;text-align:center;line-height:1.15;font-variant-numeric:tabular-nums}
-.kw b{display:block;font:700 24px var(--display);letter-spacing:.04em}
-.kw span{font-size:13px;color:var(--band-sub)}
-.seg{display:flex;gap:2px}
-.seg button{padding:5px 9px;font-size:13px;border-radius:8px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
-.seg button[aria-pressed="true"]{background:#fff;color:#004993;border-color:#fff}
-.hero{margin-top:26px}
+/* Brand band */
+.band{background:linear-gradient(180deg,rgba(0,11,114,.35),rgba(0,11,114,.7)),#000B72 url("/assets/pattern.jpg") center/cover;color:#fff;border-bottom:4px solid #B1934B}
+.band .wrap{padding-block:18px 34px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:54px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.brand b{display:block;font:700 28px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.brand span{font:600 12px var(--display);letter-spacing:.2em;text-transform:uppercase;color:#E7D3A4}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 6px 6px 14px;display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;font-size:14px;backdrop-filter:blur(2px)}
+.chip b{font:700 18px var(--display);letter-spacing:.05em}
+.chip button{padding:4px 10px;font-size:13px;border-radius:999px;background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+.chip button:hover{background:rgba(255,255,255,.28)}
+.lang{display:flex;background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px}
+.lang button{padding:4px 12px;font-size:13px;border-radius:999px;border:0;background:transparent;color:#fff}
+.lang button[aria-pressed="true"]{background:#fff;color:#000B72}
+.hero{margin-top:28px;max-width:640px}
 .hero .script{font:34px/1 var(--script);color:#E7D3A4;display:block}
-.hero h2{font:700 clamp(28px,5vw,40px)/1.05 var(--display);margin:0;text-transform:uppercase;letter-spacing:.03em;text-wrap:balance}
-.hero p{margin:8px 0 0;color:var(--band-sub);max-width:60ch}
+.hero h1{font:700 clamp(30px,5.5vw,44px)/1.02 var(--display);margin:2px 0 0;text-transform:uppercase;letter-spacing:.03em;text-wrap:balance;text-shadow:0 2px 12px rgba(0,0,40,.5)}
+.hero p{margin:10px 0 0;color:#E4E7F7;text-shadow:0 1px 8px rgba(0,0,40,.6)}
 
-main.wrap{padding-block:26px 70px;display:grid;gap:26px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:14px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:600px){.row2{grid-template-columns:1fr}}
+/* Sections */
+main.wrap{padding-block:26px 140px;display:grid;gap:22px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.sec > header{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--line)}
+.num{width:34px;height:34px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font:700 19px var(--display);flex:none}
+.sec h2{font:700 24px/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 2px;color:var(--brand)}
+@media (prefers-color-scheme:dark){.sec h2{color:#AFB7FF}}
+.sec header p{margin:0;color:var(--muted);font-size:15px}
+.items{display:grid}
+.item{padding:18px 20px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.item-head{display:flex;justify-content:space-between;align-items:center;min-height:24px}
+.item-head span{font:700 13px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sec footer{padding:12px 20px}
+.add{color:var(--brand);border:1px dashed currentColor;background:transparent}
+@media (prefers-color-scheme:dark){.add{color:#AFB7FF}}
 label{display:grid;gap:6px;font-weight:600;font-size:15px;min-width:0}
 label small{font-weight:400;color:var(--muted)}
-input,textarea{font:16px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
-input::placeholder,textarea::placeholder{color:var(--muted);opacity:.75}
-textarea{resize:vertical;min-height:96px}
-input.invalid{border-color:var(--red)}
-.sec{display:grid;gap:12px}
-.sec h3{display:flex;align-items:center;gap:10px;font:700 23px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--blue)}
-.sec h3::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
-.sec h3 .n{width:30px;height:30px;border-radius:50%;background:#004993;color:#fff;display:grid;place-items:center;font-size:17px;flex:none}
-.sec .hint{margin:-6px 0 0;color:var(--muted);font-size:15px}
-.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
-.item .top{display:flex;justify-content:space-between;align-items:center}
-.item .top span{font:700 14px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.add{justify-self:start;color:var(--blue);border-color:var(--blue);border-style:dashed;background:transparent}
+input,textarea{font:16px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--brand)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.7}
+textarea{resize:vertical;min-height:110px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:620px){.row2{grid-template-columns:1fr}}
+.compact .item{grid-template-columns:1fr auto;align-items:end;padding-block:12px}
+.compact .item-head{display:none}
 
+/* Media */
 .media{display:grid;gap:8px}
 .media > span{font-weight:600;font-size:15px}
-.drop{display:flex;align-items:center;justify-content:center;gap:8px;border:2px dashed var(--line);border-radius:10px;padding:14px;color:var(--muted);font-size:15px;cursor:pointer;background:var(--field);text-align:center}
-.drop:hover,.drop.over{border-color:var(--blue);color:var(--blue)}
-.files{display:grid;gap:6px;margin:0;padding:0;list-style:none}
-.files li{display:flex;align-items:center;gap:10px;background:var(--blue-soft);border-radius:8px;padding:6px 8px;font-size:14px;min-width:0}
-.files img,.files .vid{width:44px;height:44px;border-radius:6px;object-fit:cover;flex:none;background:var(--line);display:grid;place-items:center;font-size:18px}
-.files .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.files .sz{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
-.files li.bad{background:transparent;border:1px solid var(--red)}
-.files li.bad .sz{color:var(--red)}
+.drop{display:flex;align-items:center;justify-content:center;gap:10px;border:2px dashed var(--line);border-radius:12px;padding:16px;color:var(--muted);font-size:15px;cursor:pointer;background:var(--field);text-align:center;transition:border-color .15s,color .15s}
+.drop:hover,.drop.over{border-color:var(--brand);color:var(--brand)}
+.drop svg{flex:none}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.thumbs li{position:relative;width:92px}
+.thumbs .pic{width:92px;height:92px;border-radius:10px;object-fit:cover;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);font-size:12px;font-weight:600;text-align:center;padding:4px;overflow:hidden}
+.thumbs .cap{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.thumbs li.bad .pic{outline:2px solid var(--red)}
+.thumbs li.bad .cap{color:var(--red)}
+.thumbs .x{position:absolute;top:-8px;right:-8px;width:26px;height:26px;padding:0;border-radius:50%;background:var(--card);border:1px solid var(--line);font-size:15px;line-height:1;display:grid;place-items:center}
+.thumbs .x:hover{border-color:var(--red);color:var(--red)}
+.note{font-size:13px;color:var(--muted)}
 
-.send{background:var(--card);border:2px solid var(--blue);border-radius:14px;padding:20px;display:grid;gap:12px}
-.send h3{font:700 24px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--blue)}
-.send p{margin:0}
-.muted{color:var(--muted);font-size:15px}
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-.meter i{display:block;height:100%;background:var(--blue);width:0}
-.meter.over i{background:var(--red)}
-.status{font-size:15px;color:var(--muted);min-height:1.5em}
-.status.ok{color:var(--ok);font-weight:600}
+/* Sticky send bar */
+.sendbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(0,8,80,.08);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.sendbar .wrap{padding-block:12px;display:flex;align-items:center;gap:10px}
+.sum{flex:1;min-width:0;display:grid;line-height:1.3}
+@media (max-width:420px){.sendbar .primary{padding:11px 18px}.sum span{display:none}}
+.sum b{font-size:15px}
+.sum span{font-size:13px;color:var(--muted)}
+.status{font-size:14px;margin:0;color:var(--muted)}
 .status.err{color:var(--red);font-weight:600}
-.saved{font-size:13px;color:var(--muted)}
-.done{background:var(--ok-soft);border:2px solid var(--ok);border-radius:14px;padding:24px;display:grid;gap:10px}
-.done h3{font:700 26px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--ok)}
-pre{font:14px/1.55 var(--mono);white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;max-height:320px;overflow:auto;color:var(--ink)}
-details summary{cursor:pointer;color:var(--muted);font-size:15px}
-.preview{display:grid;gap:8px}
-.plabel{font:700 14px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
-.note{margin:0;font-size:15px;color:var(--gold);font-weight:600}
-.mailwrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
-.mail{background:#fff;color:#000;padding:20px;min-height:60px;outline:none}
-.mail img{max-width:100%;height:auto}
-.footer{text-align:center;font:28px var(--script);color:var(--blue)}
-.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.done{background:var(--ok-soft);border:2px solid var(--ok);border-radius:16px;padding:28px;display:grid;gap:10px;justify-items:start}
+.done h2{font:700 30px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--ok)}
+.done p{margin:0}
+.footer{text-align:center;font:28px var(--script);color:var(--brand)}
+@media (prefers-color-scheme:dark){.footer{color:#AFB7FF}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-
 <div class="band"><div class="wrap">
-  <header>
-    <div class="brand"><h1>Weekly Highlights</h1><p>Marketing Feldschlösschen</p></div>
-    <div class="right">
-      <div class="kw"><b id="kwLabel"></b><span id="rangeLabel"></span></div>
-      <div class="seg" role="group" aria-label="Woche"><button id="wkThis" type="button" aria-pressed="true"></button><button id="wkLast" type="button" aria-pressed="false"></button></div>
-      <div class="seg" role="group" aria-label="Sprache / Langue"><button id="langDE" type="button" aria-pressed="true">DE</button><button id="langFR" type="button" aria-pressed="false">FR</button></div>
+  <div class="top">
+    <div class="brand"><img src="/assets/logo.png" alt="Feldschlösschen"><div><b>Weekly Highlights</b><span>Marketing Feldschlösschen</span></div></div>
+    <div class="tools">
+      <div class="chip"><span><b id="kwLabel"></b> · <span id="rangeLabel"></span></span><button id="wkToggle" type="button"></button></div>
+      <div class="lang" role="group" aria-label="Sprache / Langue"><button id="langDE" type="button" aria-pressed="true">DE</button><button id="langFR" type="button" aria-pressed="false">FR</button></div>
     </div>
-  </header>
+  </div>
   <div class="hero">
     <span class="script" id="t-script"></span>
-    <h2 id="t-hero"></h2>
+    <h1 id="t-hero"></h1>
     <p id="t-heroSub"></p>
   </div>
 </div></div>
 
 <main class="wrap">
-  <div id="formArea" style="display:grid;gap:26px">
-    <div id="sections" style="display:grid;gap:26px"></div>
-    <div class="send">
-      <h3 id="t-sendTitle"></h3>
-      <p class="muted" id="t-sendHint"></p>
-      <div class="bar">
-        <button id="genBtn" type="button"></button>
-      </div>
-      <div id="previewArea" class="preview" hidden>
-        <p class="muted" id="t-previewHint"></p>
-        <p class="note" id="staleNote" hidden></p>
-        <span class="plabel" id="t-pMain"></span>
-        <div class="mailwrap"><div class="mail" id="pMain" contenteditable="true" spellcheck="true"></div></div>
-        <span class="plabel" id="t-pOutlook"></span>
-        <div class="mailwrap"><div class="mail" id="pOutlook" contenteditable="true" spellcheck="true"></div></div>
-      </div>
-      <div class="bar">
-        <button class="primary" id="sendBtn" type="button"></button>
-        <button class="link" id="resetBtn" type="button"></button>
-      </div>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-      <span class="saved" id="saved"></span>
-    </div>
-  </div>
+  <div id="formArea" style="display:grid;gap:22px"><div id="sections" style="display:grid;gap:22px"></div></div>
   <div class="done" id="doneBox" hidden>
-    <h3 id="t-doneTitle"></h3>
+    <h2 id="t-doneTitle"></h2>
     <p id="t-doneText"></p>
-    <div class="bar"><button id="againBtn" type="button"></button></div>
+    <button id="againBtn" type="button"></button>
   </div>
   <div class="footer">Merci &amp; Proscht!</div>
 </main>
+
+<div class="sendbar" id="sendbar"><div class="wrap">
+  <div class="sum"><b id="sumLine"></b><span id="subLine"></span></div>
+  <button class="ghost" id="resetBtn" type="button"></button>
+  <button class="primary" id="sendBtn" type="button"></button>
+</div></div>
 
 <script>
 const RECIPIENT_NAME = "Astrid";
 const MAX_FILE = 4.4*1024*1024;   // per file (server limit)
 const MAX_FILES = 10;             // per contribution
+const MAX_SIDE = 1400;            // photos are shrunk to this many pixels on their long side
 
 const PARTS = [
-  {id:"highlight", n:1, fields:["title","detail","next","link"], media:true,
-   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Punkt pro Thema.", title:"Titel", titlePh:"Eine Runde auf uns in der Gastro – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Im McArthur's Pub in Lenzburg fand bereits die sechste Runde unserer Gastro-Aktion statt …", next:"Nächster Termin (optional)", nextPh:"Nächster und letzter Halt: Delémont am 10.09.", link:"Link zu einem längeren Video (optional)", linkPh:"OneDrive-, SharePoint- oder WeTransfer-Link", add:"+ Weiteres Highlight", item:"Highlight"},
-   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un point par sujet.", title:"Titre", titlePh:"Une tournée offerte en gastro – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"La sixième étape de notre action gastro a eu lieu au McArthur's Pub de Lenzburg …", next:"Prochaine date (facultatif)", nextPh:"Prochaine et dernière étape : Delémont le 10.09.", link:"Lien vers une vidéo plus longue (facultatif)", linkPh:"Lien OneDrive, SharePoint ou WeTransfer", add:"+ Ajouter un temps fort", item:"Temps fort"}},
-  {id:"outlook", n:2, fields:["title"],
-   de:{name:"Ausblick nächste Woche", hint:"Was steht nächste Woche an? Eine Zeile pro Punkt.", title:"Was steht an?", titlePh:"OLMA-Vorbereitungen", add:"+ Weiterer Punkt", item:"Ausblick"},
-   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne par point.", title:"Qu'est-ce qui est prévu ?", titlePh:"Préparatifs OLMA", add:"+ Ajouter un point", item:"Point"}},
-  {id:"team", n:3, fields:["title","detail"],
-   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", add:"+ Weitere Team-News", item:"Team-News"},
-   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", add:"+ Ajouter une nouvelle", item:"Nouvelle"}}
+  {id:"highlight", fields:["title","detail","next","link"], media:true,
+   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Block pro Thema.", title:"Titel", titlePh:"Eine Runde auf uns in der Gastro – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Im McArthur's Pub in Lenzburg fand bereits die sechste Runde unserer Gastro-Aktion statt …", next:"Nächster Termin", nextPh:"Nächster und letzter Halt: Delémont am 10.09.", link:"Link zu längerem Video", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"optional", add:"Weiteres Highlight", item:"Highlight"},
+   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un bloc par sujet.", title:"Titre", titlePh:"Une tournée offerte en gastro – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"La sixième étape de notre action gastro a eu lieu au McArthur's Pub de Lenzburg …", next:"Prochaine date", nextPh:"Prochaine et dernière étape : Delémont le 10.09.", link:"Lien vers une vidéo plus longue", linkPh:"OneDrive, SharePoint, WeTransfer …", opt:"facultatif", add:"Ajouter un temps fort", item:"Temps fort"}},
+  {id:"outlook", fields:["title"], compact:true,
+   de:{name:"Ausblick nächste Woche", hint:"Was steht an? Eine Zeile pro Punkt.", title:"Punkt", titlePh:"OLMA-Vorbereitungen", add:"Weiterer Punkt", item:"Punkt"},
+   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne par point.", title:"Point", titlePh:"Préparatifs OLMA", add:"Ajouter un point", item:"Point"}},
+  {id:"team", fields:["title","detail"],
+   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", add:"Weitere Team-News", item:"Team-News"},
+   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", add:"Ajouter une nouvelle", item:"Nouvelle"}}
 ];
 const T = {
-  de:{script:"Proscht!", hero:"Dein Beitrag für diese Woche", heroSub:"Fülle aus, was du hast – leere Felder werden ignoriert. Mit «Senden» gehen Text, Fotos und Videos direkt an "+RECIPIENT_NAME+".",
-      sendTitle:"Fertig?", sendHint:"Ein Klick genügt. "+RECIPIENT_NAME+" stellt daraus die Weekly Highlights fürs ganze Marketing zusammen.",
-      send:"Senden", sending:"Wird gesendet …", uploading:"Dateien werden hochgeladen", reset:"Alles leeren", remove:"Entfernen",
-      media:"Fotos und Videos", drop:"Fotos oder Videos auswählen – oder hierher ziehen", tooBig:"zu gross (max. 4,4 MB)", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15–20 Sek.) – längere bitte als Link angeben.",
-      thisW:"Diese Woche", lastW:"Letzte Woche", empty:"Du hast noch nichts eingetragen.",
-      fileTooBig:"Mindestens eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
-      sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen – dein Entwurf ist gespeichert.",
-      doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Weiteren Beitrag erfassen",
-      confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", files:"Dateien", kw:"KW",
-      gen:"Weekly Highlights generieren", regen:"Neu generieren (überschreibt deine Änderungen)", previewHint:"So erscheint dein Beitrag in den Weekly Highlights. Du kannst den Text direkt hier anpassen – gesendet wird diese Version.", pMain:"Highlights und Team", pOutlook:"Ausblick auf nächste Woche", stale:"Du hast Felder geändert, seit die Vorschau erstellt wurde. «Neu generieren», um sie zu übernehmen – sonst wird die Vorschau so gesendet.", noOutlook:"(kein Ausblick)"},
-  fr:{script:"Santé !", hero:"Votre contribution de la semaine", heroSub:"Remplissez ce que vous avez – les champs vides sont ignorés. Avec « Envoyer », le texte, les photos et les vidéos partent directement chez "+RECIPIENT_NAME+".",
-      sendTitle:"C'est prêt ?", sendHint:"Un clic suffit. "+RECIPIENT_NAME+" en tire les Weekly Highlights pour tout le marketing.",
-      send:"Envoyer", sending:"Envoi en cours …", uploading:"Envoi des fichiers", reset:"Tout effacer", remove:"Retirer",
-      media:"Photos et vidéos", drop:"Choisir des photos ou des vidéos – ou les glisser ici", tooBig:"trop lourd (4,4 Mo max.)", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15–20 s) – pour une vidéo plus longue, indiquez un lien.",
-      thisW:"Cette semaine", lastW:"Semaine passée", empty:"Vous n'avez encore rien saisi.",
-      fileTooBig:"Au moins un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
-      sendFail:"L'envoi n'a pas abouti. Réessayez – votre brouillon est conservé.",
-      doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une autre contribution",
-      confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", files:"fichiers", kw:"S",
-      gen:"Générer les Weekly Highlights", regen:"Régénérer (remplace vos modifications)", previewHint:"Voici votre contribution telle qu'elle apparaîtra dans les Weekly Highlights. Vous pouvez modifier le texte directement ici – c'est cette version qui sera envoyée.", pMain:"Temps forts et équipe", pOutlook:"La semaine prochaine", stale:"Vous avez modifié des champs depuis la création de l'aperçu. Cliquez sur « Régénérer » pour les reprendre – sinon l'aperçu est envoyé tel quel.", noOutlook:"(aucun point)"}
+  de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Trag deine Punkte ein und häng Fotos an. "+RECIPIENT_NAME+" macht daraus die Weekly Highlights fürs ganze Marketing.",
+      send:"Senden", sending:"Wird gesendet …", uploading:"Fotos werden hochgeladen", reset:"Leeren", confirmReset:"Wirklich leeren?", remove:"Entfernen",
+      media:"Fotos und Videos", drop:"Fotos oder Videos hinzufügen", dropSub:"klicken oder hierher ziehen", tooBig:"zu gross", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15 Sek.) – längere bitte als Link.",
+      lastW:"Letzte Woche?", thisW:"Diese Woche", kw:"KW",
+      nothing:"Noch nichts eingetragen", hl:["Highlight","Highlights"], ol:["Ausblick","Ausblick-Punkte"], tm:["Team-News","Team-News"], ph:["Foto/Video","Fotos/Videos"],
+      empty:"Du hast noch nichts eingetragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
+      sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen – deine Eingaben sind gespeichert.", saved:"Entwurf gespeichert",
+      doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Weiteren Beitrag erfassen"},
+  fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Saisissez vos points et ajoutez des photos. "+RECIPIENT_NAME+" en fera les Weekly Highlights pour tout le marketing.",
+      send:"Envoyer", sending:"Envoi en cours …", uploading:"Envoi des photos", reset:"Effacer", confirmReset:"Vraiment effacer ?", remove:"Retirer",
+      media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
+      lastW:"Semaine passée ?", thisW:"Cette semaine", kw:"S",
+      nothing:"Rien de saisi pour l'instant", hl:["temps fort","temps forts"], ol:["point à venir","points à venir"], tm:["nouvelle","nouvelles"], ph:["photo/vidéo","photos/vidéos"],
+      empty:"Vous n'avez encore rien saisi.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
+      sendFail:"L'envoi n'a pas abouti. Réessayez – votre saisie est conservée.", saved:"Brouillon enregistré",
+      doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une autre contribution"}
 };
 
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let lang=store.get("whb-lang")||((navigator.language||"").toLowerCase().startsWith("fr")?"fr":"de");
 const tr=k=>T[lang][k];
+const plural=(n,k)=>n+" "+T[lang][k][n===1?0:1];
 
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return{y,w:Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)};}
@@ -213,222 +194,172 @@ const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
 function weekInfo(offset){
   const m=mondayOf(new Date()); m.setDate(m.getDate()-7*offset);
   const {y,w}=isoWeek(m); const s=new Date(m); s.setDate(s.getDate()+6);
-  return {week:w, key:y+"-W"+String(w).padStart(2,"0"), range:fmt(m)+" – "+fmt(s)+s.getFullYear()};
+  return {week:w, key:y+"-W"+String(w).padStart(2,"0"), range:fmt(m)+"–"+fmt(s)+s.getFullYear()};
 }
 let offset=0, W=weekInfo(0);
 
-// Files live only in memory (a saved draft cannot hold them).
-const FILES=new WeakMap();
+const FILES=new WeakMap();            // item -> files (kept in memory only)
 const filesOf=it=>{ if(!FILES.has(it)) FILES.set(it,[]); return FILES.get(it); };
 const mb=b=>(b/1048576).toLocaleString(lang==="fr"?"fr-CH":"de-CH",{maximumFractionDigits:1})+" MB";
+const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
 
 const blank=()=>({highlight:[{}],outlook:[{}],team:[{}]});
 function loadDraft(){ try{ const s=JSON.parse(store.get("whb-draft")||"null"); if(s&&s.week===W.key&&s.items) return s.items; }catch(e){} return blank(); }
 let state=loadDraft();
-let saveTimer;
-function save(){
-  markStale();
-  store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-  clearTimeout(saveTimer); $("saved").textContent=tr("savedAt")+" ✓";
-  saveTimer=setTimeout(()=>{$("saved").textContent="";},2500);
-}
+let savedFlash=0;
+function save(){ store.set("whb-draft",JSON.stringify({week:W.key,items:state})); savedFlash=Date.now(); updateBar(); setTimeout(updateBar,2600); }
 
-// Shrink photos to max 1600 px JPEG.
-let fileSeq=0;
-async function prepare(file){ const p=await prepare0(file); p.id="f"+(++fileSeq); return p; }
-async function prepare0(file){
-  const isImg=file.type.startsWith("image/") && !/gif|svg/.test(file.type);
-  if(isImg){
-    try{
-      const bmp=await createImageBitmap(file);
-      const scale=Math.min(1,1600/Math.max(bmp.width,bmp.height));
-      const c=document.createElement("canvas"); c.width=Math.round(bmp.width*scale); c.height=Math.round(bmp.height*scale);
-      c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
-      const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.82));
-      if(blob && (blob.size<file.size || !/jpe?g|png|webp/.test(file.type))) return {name:file.name.replace(/\.[^.]+$/,"")+".jpg", blob, kind:"img"};
-    }catch(e){}
-    return {name:file.name, blob:file, kind:"img"};
-  }
-  return {name:file.name, blob:file, kind:"vid"};
+async function shrink(file){
+  if(!file.type.startsWith("image/") || /gif|svg/.test(file.type)) return {name:file.name, blob:file, kind:file.type.startsWith("video/")?"vid":"img"};
+  try{
+    const bmp=await createImageBitmap(file);
+    const scale=Math.min(1,MAX_SIDE/Math.max(bmp.width,bmp.height));
+    const c=document.createElement("canvas"); c.width=Math.round(bmp.width*scale); c.height=Math.round(bmp.height*scale);
+    c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.82));
+    if(blob) return {name:file.name.replace(/\.[^.]+$/,"")+".jpg", blob, kind:"img"};
+  }catch(e){}
+  return {name:file.name, blob:file, kind:"img"};
 }
 async function addFiles(it,list){
-  const arr=filesOf(it);
   for(const f of list){
     if(!/^(image|video)\//.test(f.type)) continue;
     if(allFiles().length>=MAX_FILES){ setStatus(tr("tooMany"),"err"); break; }
-    const p=await prepare(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; arr.push(p);
+    const p=await shrink(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; filesOf(it).push(p);
   }
-  markStale(); render();
+  render();
 }
 function allFiles(){ const out=[]; state.highlight.forEach(it=>filesOf(it).forEach(f=>out.push(f))); return out; }
 
+const ICON_UP='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>';
+
 function render(){
   document.documentElement.lang=lang;
-  ["script","hero","heroSub","sendTitle","sendHint","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
-  $("sendBtn").textContent=tr("send"); $("genBtn").textContent=previewOn?tr("regen"):tr("gen"); ["previewHint","pMain","pOutlook"].forEach(k=>$("t-"+k).textContent=tr(k)); $("staleNote").textContent=tr("stale"); $("resetBtn").textContent=tr("reset"); $("againBtn").textContent=tr("again");
-  $("wkThis").textContent=tr("thisW"); $("wkLast").textContent=tr("lastW");
-  $("wkThis").setAttribute("aria-pressed",offset===0); $("wkLast").setAttribute("aria-pressed",offset===1);
+  ["script","hero","heroSub","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
+  $("againBtn").textContent=tr("again"); $("sendBtn").textContent=tr("send");
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
+  $("wkToggle").textContent=offset===0?tr("lastW"):tr("thisW");
   $("langDE").setAttribute("aria-pressed",lang==="de"); $("langFR").setAttribute("aria-pressed",lang==="fr");
+  resetArm(false);
   const box=$("sections"); box.innerHTML="";
-  PARTS.forEach(p=>{
+  PARTS.forEach((p,pi)=>{
     const L=p[lang];
-    const sec=document.createElement("section"); sec.className="sec";
-    const h=document.createElement("h3"); const n=document.createElement("span"); n.className="n"; n.textContent=p.n; const t=document.createElement("span"); t.textContent=L.name; h.append(n,t);
-    const hint=document.createElement("p"); hint.className="hint"; hint.textContent=L.hint;
-    sec.append(h,hint);
+    const sec=document.createElement("section"); sec.className="sec"+(p.compact?" compact":"");
+    sec.innerHTML='<header><span class="num">'+(pi+1)+'</span><div><h2></h2><p></p></div></header><div class="items"></div><footer></footer>';
+    sec.querySelector("h2").textContent=L.name; sec.querySelector("header p").textContent=L.hint;
+    const items=sec.querySelector(".items");
     state[p.id].forEach((it,ix)=>{
       const card=document.createElement("div"); card.className="item";
-      const top=document.createElement("div"); top.className="top";
-      const lbl=document.createElement("span"); lbl.textContent=L.item+" "+(ix+1); top.append(lbl);
-      if(state[p.id].length>1){ const rm=document.createElement("button"); rm.className="link"; rm.type="button"; rm.textContent=tr("remove"); rm.onclick=()=>{ state[p.id].splice(ix,1); save(); render(); }; top.append(rm); }
-      card.append(top);
-      const mk=(f,multi)=>{ const l=document.createElement("label"); const s=document.createElement("span"); s.textContent=L[f]; l.append(s);
+      const head=document.createElement("div"); head.className="item-head";
+      const lbl=document.createElement("span"); lbl.textContent=L.item+" "+(ix+1); head.append(lbl);
+      const rm=document.createElement("button"); rm.className="ghost"; rm.type="button"; rm.textContent=tr("remove");
+      rm.onclick=()=>{ filesOf(it).forEach(f=>f.url&&URL.revokeObjectURL(f.url)); state[p.id].splice(ix,1); if(!state[p.id].length) state[p.id].push({}); save(); render(); };
+      if(!p.compact){ if(state[p.id].length>1) head.append(rm); card.append(head); }
+      const mk=(f,multi,optional)=>{ const l=document.createElement("label"); const s=document.createElement("span"); s.textContent=L[f];
+        if(optional){ const o=document.createElement("small"); o.textContent=" · "+L.opt; s.append(o); } l.append(s);
         const el=document.createElement(multi?"textarea":"input"); el.placeholder=L[f+"Ph"]||""; el.value=it[f]||""; el.id=p.id+"-"+ix+"-"+f;
         el.addEventListener("input",()=>{ it[f]=el.value; save(); }); l.append(el); return l; };
       if(p.fields.includes("title")) card.append(mk("title"));
       if(p.fields.includes("detail")) card.append(mk("detail",true));
       if(p.media) card.append(mediaBlock(it,p.id+"-"+ix));
-      if(p.fields.includes("next")) card.append(mk("next"));
-      if(p.fields.includes("link")) card.append(mk("link"));
-      sec.append(card);
+      if(p.fields.includes("next")){ const r=document.createElement("div"); r.className="row2"; r.append(mk("next",false,true),mk("link",false,true)); card.append(r); }
+      if(p.compact && state[p.id].length>1) card.append(rm);
+      items.append(card);
     });
-    const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent=L.add;
-    add.onclick=()=>{ state[p.id].push({}); save(); render(); const last=$(p.id+"-"+(state[p.id].length-1)+"-title"); if(last) last.focus(); };
-    sec.append(add);
+    const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent="+ "+L.add;
+    add.onclick=()=>{ state[p.id].push({}); save(); render(); const el=$(p.id+"-"+(state[p.id].length-1)+"-title"); if(el) el.focus(); };
+    sec.querySelector("footer").append(add);
     box.append(sec);
   });
+  updateBar();
 }
 function mediaBlock(it,key){
   const wrap=document.createElement("div"); wrap.className="media";
   const head=document.createElement("span"); head.textContent=tr("media"); wrap.append(head);
   const input=document.createElement("input"); input.type="file"; input.multiple=true; input.accept="image/*,video/*"; input.hidden=true; input.id=key+"-files";
   input.onchange=()=>{ addFiles(it,[...input.files]); input.value=""; };
-  const drop=document.createElement("div"); drop.className="drop"; drop.tabIndex=0; drop.setAttribute("role","button"); drop.textContent="📎 "+tr("drop");
+  const fs=filesOf(it);
+  if(fs.length){
+    const list=document.createElement("ul"); list.className="thumbs";
+    fs.forEach((f,i)=>{
+      const big=f.blob.size>MAX_FILE;
+      const li=document.createElement("li"); if(big) li.className="bad";
+      let pic; if(f.url){ pic=document.createElement("img"); pic.src=f.url; pic.alt=""; } else { pic=document.createElement("div"); pic.textContent="▶ Video"; }
+      pic.className="pic";
+      const cap=document.createElement("span"); cap.className="cap"; cap.textContent=big?tr("tooBig")+" · "+mb(f.blob.size):f.name; cap.title=f.name;
+      const x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="×"; x.setAttribute("aria-label",tr("remove")+" "+f.name);
+      x.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); fs.splice(i,1); render(); };
+      li.append(pic,cap,x); list.append(li);
+    });
+    wrap.append(list);
+  }
+  const drop=document.createElement("div"); drop.className="drop"; drop.tabIndex=0; drop.setAttribute("role","button");
+  drop.innerHTML=ICON_UP+'<span><b></b><br><small></small></span>'; drop.querySelector("b").textContent=tr("drop"); drop.querySelector("small").textContent=tr("dropSub");
   drop.onclick=()=>input.click(); drop.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); input.click(); } };
   drop.ondragover=e=>{ e.preventDefault(); drop.classList.add("over"); }; drop.ondragleave=()=>drop.classList.remove("over");
   drop.ondrop=e=>{ e.preventDefault(); drop.classList.remove("over"); addFiles(it,[...e.dataTransfer.files]); };
-  wrap.append(input,drop);
-  const list=document.createElement("ul"); list.className="files";
-  filesOf(it).forEach((f,i)=>{
-    const big=f.blob.size>MAX_FILE;
-    const li=document.createElement("li"); if(big) li.className="bad";
-    let th; if(f.url){ th=document.createElement("img"); th.src=f.url; th.alt=""; } else { th=document.createElement("span"); th.className="vid"; th.textContent="🎬"; }
-    const nm=document.createElement("span"); nm.className="nm"; nm.textContent=f.name;
-    const sz=document.createElement("span"); sz.className="sz"; sz.textContent=mb(f.blob.size)+(big?" – "+tr("tooBig"):"");
-    const rm=document.createElement("button"); rm.className="link"; rm.type="button"; rm.textContent=tr("remove");
-    rm.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); filesOf(it).splice(i,1); markStale(); render(); };
-    li.append(th,nm,sz,rm); list.append(li);
-  });
-  if(filesOf(it).length) wrap.append(list);
-  const note=document.createElement("small"); note.className="muted"; note.textContent=tr("photoNote"); wrap.append(note);
+  const note=document.createElement("span"); note.className="note"; note.textContent=tr("photoNote");
+  wrap.append(input,drop,note);
   return wrap;
 }
-function setStatus(msg,kind){ const s=$("status"); s.textContent=msg; s.className="status"+(kind?" "+kind:""); }
-const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
-function hasContent(){
-  return state.highlight.some(i=>clean(i.title)||clean(i.detail)||filesOf(i).length) || state.outlook.some(i=>clean(i.title)) || state.team.some(i=>clean(i.title)||clean(i.detail));
-}
 
-// ---------- Preview in the format of the weekly mail (editable) ----------
-let previewOn=false, previewStale=false;
-function markStale(){ if(previewOn){ previewStale=true; $("staleNote").hidden=false; } }
-const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const F='font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#000000;';
-const P=h=>'<p style="'+F+'margin:0 0 10px 0;">'+h+'</p>';
-const para=t=>esc(t).split(/\n\s*\n/).map(b=>P(b.replace(/\n/g,"<br>"))).join("");
-const bullets=(items,bold)=>'<ul style="'+F+'margin:14px 0 8px 0;padding-left:24px;">'+items.map(t=>'<li style="'+F+'margin:0 0 4px 0;">'+(bold?'<b>'+esc(t)+'</b>':esc(t))+'</li>').join("")+'</ul>';
-function previewMain(){
-  let h="";
-  state.highlight.forEach(i=>{
-    const title=clean(i.title), detail=clean(i.detail), fs=filesOf(i);
-    if(!title&&!detail&&!fs.length) return;
-    h+=bullets([title||detail.split("\n")[0]||"Highlight"],true);
-    const rest=title?detail:detail.split("\n").slice(1).join("\n");
-    if(rest.trim()) h+=para(rest);
-    const imgs=fs.filter(f=>f.kind==="img"), vids=fs.filter(f=>f.kind==="vid");
-    if(imgs.length){ const w=imgs.length===1?480:236; h+='<p style="'+F+'margin:0 0 10px 0;">'+imgs.map(f=>'<img data-fid="'+f.id+'" src="'+f.url+'" width="'+w+'" alt="'+esc(f.name)+'" style="width:'+w+'px;max-width:100%;height:auto;margin:0 8px 8px 0;vertical-align:top;">').join("")+'</p>'; }
-    vids.forEach(f=>{ h+=P('▶ <a data-fid="'+f.id+'" href="#" style="color:#004993;">Video ansehen ('+esc(f.name)+')</a>'); });
-    if(clean(i.link)) h+=P('▶ <a href="'+esc(clean(i.link))+'" style="color:#004993;">Video / Fotos ansehen</a>');
-    if(clean(i.next)) h+=bullets([clean(i.next)],false);
-    h+=P("&nbsp;");
-  });
-  const team=state.team.filter(i=>clean(i.title)||clean(i.detail));
-  if(team.length){
-    h+=P("<b>Team</b>");
-    team.forEach(i=>{ const t=clean(i.title), d=clean(i.detail); h+=bullets([t||d.split("\n")[0]],false); const r=t?d:d.split("\n").slice(1).join("\n"); if(r.trim()) h+=para(r); });
-  }
-  return h;
+function counts(){
+  return {
+    hl: state.highlight.filter(i=>clean(i.title)||clean(i.detail)||filesOf(i).length).length,
+    ol: state.outlook.filter(i=>clean(i.title)).length,
+    tm: state.team.filter(i=>clean(i.title)||clean(i.detail)).length,
+    ph: allFiles().length
+  };
 }
-function previewOutlook(){ const o=state.outlook.map(i=>clean(i.title)).filter(Boolean); return o.length?bullets(o,false):""; }
-$("genBtn").onclick=()=>{
-  if(!hasContent()){ setStatus(tr("empty"),"err"); return; }
-  $("pMain").innerHTML=previewMain()||P("&nbsp;");
-  $("pOutlook").innerHTML=previewOutlook()||P(esc(tr("noOutlook")));
-  previewOn=true; previewStale=false; $("staleNote").hidden=true; $("previewArea").hidden=false;
-  $("genBtn").textContent=tr("regen"); setStatus("");
-  $("previewArea").scrollIntoView({behavior:"smooth",block:"start"});
+let statusMsg="", statusKind="";
+function setStatus(m,k){ statusMsg=m; statusKind=k||""; updateBar(); }
+function updateBar(){
+  const c=counts(), parts=[];
+  if(c.hl) parts.push(plural(c.hl,"hl")); if(c.ol) parts.push(plural(c.ol,"ol")); if(c.tm) parts.push(plural(c.tm,"tm")); if(c.ph) parts.push(plural(c.ph,"ph"));
+  $("sumLine").textContent=parts.length?parts.join(" · "):tr("nothing");
+  const sub=$("subLine");
+  if(statusMsg){ sub.textContent=statusMsg; sub.className="status"+(statusKind?" "+statusKind:""); }
+  else { sub.textContent=Date.now()-savedFlash<2500?tr("saved")+" ✓":tr("kw")+" "+W.week+" · "+W.range; sub.className=""; }
+}
+let armTimer;
+function resetArm(on){ const r=$("resetBtn"); clearTimeout(armTimer); r.dataset.arm=on?"1":""; r.textContent=on?tr("confirmReset"):tr("reset"); if(on) armTimer=setTimeout(()=>resetArm(false),4000); }
+$("resetBtn").onclick=()=>{
+  if(!$("resetBtn").dataset.arm){ resetArm(true); return; }
+  allFiles().forEach(f=>f.url&&URL.revokeObjectURL(f.url)); state=blank(); save(); setStatus(""); render();
 };
-// Turn the edited preview into the HTML that is sent: local photo previews become stored media links.
-function exportPreview(el,keyById){
-  const c=el.cloneNode(true);
-  c.querySelectorAll("[data-fid]").forEach(n=>{
-    const key=keyById[n.getAttribute("data-fid")];
-    if(!key){ (n.tagName==="IMG"?n:n.closest("p")||n).remove(); return; }
-    if(n.tagName==="IMG") n.setAttribute("src","/api/media/"+key); else n.setAttribute("href","/api/media/"+key);
-    n.removeAttribute("data-fid");
-  });
-  return c.innerHTML;
-}
-function hidePreview(){ previewOn=false; previewStale=false; $("previewArea").hidden=true; $("pMain").innerHTML=""; $("pOutlook").innerHTML=""; }
 
 async function upload(f){
   const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":f.blob.type||"application/octet-stream","x-filename":encodeURIComponent(f.name)},body:f.blob});
   if(!res.ok) throw new Error("upload "+res.status);
   return (await res.json()).key;
 }
-
 $("sendBtn").onclick=async ()=>{
-  if(!hasContent()){ setStatus(tr("empty"),"err"); return; }
+  const c=counts();
+  if(!c.hl && !c.ol && !c.tm){ setStatus(tr("empty"),"err"); return; }
   const files=allFiles();
   if(files.length>MAX_FILES){ setStatus(tr("tooMany"),"err"); return; }
   if(files.some(f=>f.blob.size>MAX_FILE)){ setStatus(tr("fileTooBig"),"err"); return; }
   const btn=$("sendBtn"); btn.disabled=true; btn.textContent=tr("sending"); setStatus("");
   try{
-    let done=0;
-    for(const f of files){
-      if(!f.key){ setStatus(tr("uploading")+" "+(done+1)+"/"+files.length+" …"); f.key=await upload(f); }
-      done++;
-    }
+    for(let i=0;i<files.length;i++){ if(!files[i].key){ setStatus(tr("uploading")+" "+(i+1)+"/"+files.length+" …"); files[i].key=await upload(files[i]); } }
     const items={
       highlight: state.highlight.map(i=>({title:clean(i.title),detail:clean(i.detail),next:clean(i.next),link:clean(i.link),media:filesOf(i).map(f=>({key:f.key,kind:f.kind,name:f.name}))})),
       outlook: state.outlook.map(i=>({title:clean(i.title)})),
       team: state.team.map(i=>({title:clean(i.title),detail:clean(i.detail)}))
     };
-    const keyById={}; files.forEach(f=>keyById[f.id]=f.key);
-    const html=previewOn?{main:exportPreview($("pMain"),keyById),outlook:exportPreview($("pOutlook"),keyById)}:null;
-    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items,html})});
+    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items})});
     if(!res.ok) throw new Error("submit "+res.status);
     files.forEach(f=>f.url&&URL.revokeObjectURL(f.url));
     state=blank(); store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-    hidePreview(); setStatus(""); $("formArea").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
-  }catch(e){
-    setStatus(tr("sendFail"),"err");
-  }finally{ btn.disabled=false; btn.textContent=tr("send"); }
+    setStatus(""); $("formArea").hidden=true; $("sendbar").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
+  }catch(e){ setStatus(tr("sendFail"),"err"); }
+  finally{ btn.disabled=false; btn.textContent=tr("send"); }
 };
-$("againBtn").onclick=()=>{ $("doneBox").hidden=true; $("formArea").hidden=false; setStatus(""); render(); };
-$("resetBtn").onclick=()=>{
-  const r=$("resetBtn");
-  if(!r.dataset.arm){ r.dataset.arm="1"; r.textContent=tr("confirmReset"); setTimeout(()=>{delete r.dataset.arm; r.textContent=tr("reset");},4000); return; }
-  delete r.dataset.arm; state=blank(); save(); hidePreview(); render(); setStatus("");
-};
-function setWeek(o){ offset=o; W=weekInfo(o); state=loadDraft(); render(); setStatus(""); }
-$("wkThis").onclick=()=>setWeek(0);
-$("wkLast").onclick=()=>setWeek(1);
+$("againBtn").onclick=()=>{ $("doneBox").hidden=true; $("formArea").hidden=false; $("sendbar").hidden=false; render(); };
+$("wkToggle").onclick=()=>{ offset=offset?0:1; W=weekInfo(offset); state=loadDraft(); setStatus(""); render(); };
 $("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
 $("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
 render();
-
 </script>
 </body>
 </html>

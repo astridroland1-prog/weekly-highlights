@@ -5,108 +5,137 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>Weekly Highlights – Compilation</title>
+<link rel="icon" href="/assets/logo.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: brand band, then toolbar, contribution list and the e-mail as it will be pasted into Outlook. */
+/* Layout: brand band; then a sidebar (week + contributions) and the e-mail as it will be pasted into Outlook. */
 :root{
-  --blue:#004993; --blue-soft:#E8EFF8;
-  --bg:#F2F5F9; --card:#FFFFFF; --ink:#0E1C30; --muted:#566377; --line:#D9E1EC; --field:#F7F9FC;
-  --gold:#B1934B; --red:#C0281A; --ok:#2F6B3F;
+  --brand:#000B72; --brand-hover:#00095A; --brand-soft:#E9EBF7;
+  --bg:#F3F4F9; --card:#FFFFFF; --ink:#111633; --muted:#5B6180; --line:#DDE0EE; --field:#F8F9FC;
+  --gold:#B1934B; --red:#D02A12; --ok:#2F6B3F;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow","Segoe UI",Arial,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
-  --blue:#6FA3E0; --blue-soft:#16263B;
-  --bg:#0C1522; --card:#132033; --ink:#E6ECF4; --muted:#9AA8BB; --line:#26364C; --field:#0F1A2A;
-  --gold:#D2B46B; --red:#FF7A6B; --ok:#7CC48E; color-scheme:dark}}
+  --brand-soft:#1A1F45; --bg:#0B0E24; --card:#141936; --ink:#E8EAF6; --muted:#A0A6C4; --line:#272E55; --field:#10142E;
+  --gold:#D2B46B; --red:#FF7A66; --ok:#7CC48E; color-scheme:dark}}
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--body)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
 [hidden]{display:none!important}
-.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:600 15px var(--body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 16px;cursor:pointer}
-button:hover{border-color:var(--blue)}
-button:disabled{opacity:.55;cursor:wait}
-:is(button,input,.mail):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-button.primary{background:#004993;border-color:#004993;color:#fff;font-size:17px;padding:12px 24px}
-button.primary:hover:not(:disabled){background:#00356B}
-button.link{border:0;background:none;padding:4px 6px;color:var(--muted);font-weight:500;font-size:14px}
-button.link:hover{color:var(--red);text-decoration:underline}
+button:hover{border-color:var(--brand)}
+button:disabled{opacity:.5;cursor:default}
+:is(button,input,.paper):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.primary{background:var(--brand);border-color:var(--brand);color:#fff;padding:11px 22px}
+.primary:hover:not(:disabled){background:var(--brand-hover)}
+.ghost{background:transparent;border:0;color:var(--muted);font-weight:500;font-size:14px;padding:4px 6px}
+.ghost:hover{color:var(--red)}
 input{font:16px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
 
-.band{background:#004993;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 14px,transparent 14px 28px);color:#fff;border-bottom:4px solid #B1934B}
-.band .wrap{padding-block:20px 24px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
-.band h1{font:700 30px/1 var(--display);margin:0;letter-spacing:.06em;text-transform:uppercase}
-.band p{margin:4px 0 0;font:600 13px var(--display);letter-spacing:.18em;text-transform:uppercase;color:#E7D3A4}
-.band a{color:#fff;font-size:14px}
+.band{background:linear-gradient(180deg,rgba(0,11,114,.35),rgba(0,11,114,.7)),#000B72 url("/assets/pattern.jpg") center/cover;color:#fff;border-bottom:4px solid #B1934B}
+.band .wrap{padding-block:16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand img{width:46px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.brand b{display:block;font:700 26px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.brand span{font:600 12px var(--display);letter-spacing:.2em;text-transform:uppercase;color:#E7D3A4}
+.band a{color:#fff;font-size:14px;background:rgba(0,5,50,.55);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;text-decoration:none}
+.band a:hover{background:rgba(0,5,50,.8)}
 
-main.wrap{padding-block:24px 70px;display:grid;gap:22px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:12px}
-.card h2{font:700 22px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--blue)}
-.muted{color:var(--muted);font-size:15px;margin:0}
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.login{max-width:440px}
-.weeknav{display:flex;align-items:center;gap:8px}
-.weeknav b{font:700 24px var(--display);letter-spacing:.04em;min-width:120px;text-align:center;font-variant-numeric:tabular-nums}
-.weeknav span{color:var(--muted);font-size:14px}
-.status{font-size:15px;color:var(--muted);min-height:1.4em;margin:0}
+main.wrap{padding-block:24px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px}
+.card h2{font:700 20px var(--display);text-transform:uppercase;letter-spacing:.06em;margin:0;color:var(--brand)}
+@media (prefers-color-scheme:dark){.card h2{color:#AFB7FF}}
+.muted{color:var(--muted);font-size:14px;margin:0}
+.status{font-size:14px;margin:0;color:var(--muted);min-height:1.3em}
 .status.ok{color:var(--ok);font-weight:600}
 .status.err{color:var(--red);font-weight:600}
-.entries{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.entries li{display:flex;gap:10px;align-items:center;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;min-width:0}
-.entries .what{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.entries time{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
-/* The e-mail itself stays white like in Outlook, in both themes */
-.mailwrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
-.mail{background:#fff;color:#000;padding:28px;min-height:200px;outline:none}
-.mail img{max-width:100%;height:auto}
-.empty{color:var(--muted);text-align:center;padding:24px}
+
+.login{max-width:420px;margin:40px auto}
+.login form{display:flex;gap:10px;flex-wrap:wrap}
+
+.app{display:grid;grid-template-columns:330px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:960px){.app{grid-template-columns:1fr}}
+aside{display:grid;gap:16px;position:sticky;top:16px}
+@media (max-width:960px){aside{position:static}}
+.weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.weeknav button{width:40px;height:40px;padding:0;font-size:20px;border-radius:50%}
+.weeknav div{text-align:center}
+.weeknav b{display:block;font:700 30px/1 var(--display);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.weeknav span{color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:8px 4px}
+.stats b{display:block;font:700 24px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+.entries{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:46vh;overflow:auto}
+.entries li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:4px;background:var(--field)}
+.entries .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.entries .what{font-size:14px;overflow-wrap:anywhere}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:12px}
+
+.editor{display:grid;gap:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;z-index:2;background:var(--bg);padding-block:8px}
+.subject{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:15px;min-width:0}
+.subject span{color:var(--muted);flex:none}
+.subject b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The e-mail stays white like in Outlook, in both themes */
+.paperwrap{background:#fff;overflow-x:auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,8,80,.10);border:1px solid var(--line)}
+.paper{background:#fff;color:#000;padding:36px 40px;min-height:360px;outline:none;max-width:760px}
+.paper img{max-width:100%;height:auto}
+.paper .placeholder{color:#7a7f99;font-family:var(--body);text-align:center;padding:60px 20px}
 </style>
 </head>
 <body>
 <div class="band"><div class="wrap">
-  <div><h1>Weekly Highlights</h1><p>Compilation de la semaine</p></div>
-  <a href="/">Formulaire de l'équipe ↗</a>
+  <div class="brand"><img src="/assets/logo.png" alt="Feldschlösschen"><div><b>Weekly Highlights</b><span>Compilation</span></div></div>
+  <a href="/" target="_blank" rel="noopener">Formulaire de l'équipe ↗</a>
 </div></div>
 
 <main class="wrap">
   <section class="card login" id="loginBox">
     <h2>Accès</h2>
     <p class="muted">Cette page est réservée à Astrid. Entrez le mot de passe.</p>
-    <form id="loginForm" class="bar">
+    <form id="loginForm">
       <input id="pw" type="password" autocomplete="current-password" aria-label="Mot de passe" style="flex:1;min-width:180px">
       <button class="primary" type="submit">Ouvrir</button>
     </form>
     <p class="status" id="loginStatus" role="status"></p>
   </section>
 
-  <div id="app" hidden style="display:grid;gap:22px">
-    <section class="card">
-      <div class="bar" style="justify-content:space-between">
+  <div class="app" id="app" hidden>
+    <aside>
+      <section class="card">
         <div class="weeknav">
           <button id="prevW" type="button" aria-label="Semaine précédente">‹</button>
-          <div style="text-align:center"><b id="wkLabel"></b><br><span id="wkRange"></span></div>
+          <div><b id="wkLabel"></b><span id="wkRange"></span></div>
           <button id="nextW" type="button" aria-label="Semaine suivante">›</button>
         </div>
+        <div class="stats">
+          <div><b id="nEntries">0</b><span>contributions</span></div>
+          <div><b id="nHl">0</b><span>temps forts</span></div>
+          <div><b id="nPh">0</b><span>photos</span></div>
+        </div>
         <button id="reload" type="button">Actualiser</button>
-      </div>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-      <details id="entriesBox"><summary class="muted" id="entriesSum"></summary>
-        <ul class="entries" id="entries" style="margin-top:10px"></ul>
-      </details>
-    </section>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+      <section class="card">
+        <h2>Contributions</h2>
+        <ul class="entries" id="entries"></ul>
+      </section>
+    </aside>
 
-    <section class="card">
-      <h2>Le mail de la semaine</h2>
-      <p class="muted">Vous pouvez corriger le texte directement ci-dessous. Ensuite, « Copier pour Outlook », puis collez-le dans un nouveau mail avec Ctrl+V : les photos restent dans le texte.</p>
-      <div class="bar">
+    <section class="editor">
+      <div class="toolbar">
         <button class="primary" id="copyHtml" type="button">Copier pour Outlook</button>
-        <button id="copyText" type="button">Copier le texte seul</button>
-        <button class="link" id="rebuild" type="button">Annuler mes corrections</button>
+        <button id="copyText" type="button">Texte seul</button>
+        <button class="ghost" id="rebuild" type="button">Régénérer depuis les contributions</button>
+        <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
       </div>
-      <p class="status" id="copyStatus" role="status" aria-live="polite"></p>
-      <div class="mailwrap"><div class="mail" id="mail" contenteditable="true" spellcheck="true"></div></div>
+      <div class="subject"><span>Objet :</span><b id="subject"></b><button class="ghost" id="copySubject" type="button">Copier</button></div>
+      <p class="muted">Corrigez le texte directement dans le mail ci-dessous, puis « Copier pour Outlook » et collez dans un nouveau mail avec Ctrl+V. Les photos restent dans le texte.</p>
+      <div class="paperwrap"><div class="paper" id="mail" contenteditable="true" spellcheck="true"></div></div>
     </section>
   </div>
 </main>
@@ -116,6 +145,7 @@ const $=id=>document.getElementById(id);
 const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}};
 let PW=ss.get("wh-pw")||"";
 let entries=[];
+const IMG_ONE=320, IMG_MANY=190;   // display widths in the e-mail (px)
 
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return{y,w:Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)};}
@@ -134,16 +164,15 @@ async function api(method,query){
   if(!res.ok) throw new Error("http "+res.status);
   return res.json();
 }
-
 async function load(){
   const W=weekInfo();
-  $("wkLabel").textContent="KW "+W.week; $("wkRange").textContent=W.range;
-  $("nextW").disabled=offset===0;
+  $("wkLabel").textContent="KW "+W.week; $("wkRange").textContent=W.range; $("nextW").disabled=offset===0;
+  $("subject").textContent="Weekly Highlights KW "+W.week;
   setStatus("status","Chargement …");
   try{
     const data=await api("GET","week="+encodeURIComponent(W.key));
     entries=data.entries||[];
-    setStatus("status", entries.length ? entries.length+(entries.length>1?" contributions reçues":" contribution reçue")+" pour la KW "+W.week+"." : "Aucune contribution pour la KW "+W.week+" pour l'instant.", entries.length?"ok":"");
+    setStatus("status", entries.length?"À jour.":"Aucune contribution pour cette semaine pour l'instant.", entries.length?"ok":"");
     renderEntries(); buildMail();
     return true;
   }catch(e){
@@ -152,81 +181,76 @@ async function load(){
     return false;
   }
 }
-
 function summary(e){
-  const it=e.items||{};
-  const parts=[];
-  (it.highlight||[]).forEach(h=>parts.push(h.title||h.detail.slice(0,60)));
-  if((it.outlook||[]).length) parts.push((it.outlook.length)+"× Ausblick");
-  if((it.team||[]).length) parts.push((it.team.length)+"× Team");
+  const it=e.items||{}, parts=[];
+  (it.highlight||[]).forEach(h=>parts.push(h.title||(h.detail||"").slice(0,60)));
+  if((it.outlook||[]).length) parts.push(it.outlook.length+"× Ausblick");
+  if((it.team||[]).length) parts.push(it.team.length+"× Team");
   return parts.join(" · ")||"(vide)";
 }
 function renderEntries(){
-  $("entriesBox").hidden=!entries.length;
-  $("entriesSum").textContent="Voir les contributions (et supprimer un test)";
+  let hl=0, ph=0;
+  entries.forEach(e=>(e.items?.highlight||[]).forEach(h=>{ hl++; ph+=(h.media||[]).filter(m=>m.kind==="img").length; }));
+  $("nEntries").textContent=entries.length; $("nHl").textContent=hl; $("nPh").textContent=ph;
   const ul=$("entries"); ul.innerHTML="";
+  if(!entries.length){ const li=document.createElement("li"); li.className="empty"; li.textContent="Les contributions de l'équipe apparaîtront ici."; ul.append(li); return; }
   entries.forEach(e=>{
     const li=document.createElement("li");
-    const t=document.createElement("time"); const d=new Date(e.createdAt);
-    t.textContent=d.toLocaleDateString("fr-CH",{weekday:"short",day:"numeric",month:"numeric"})+" "+d.toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"});
-    const w=document.createElement("span"); w.className="what"; w.textContent=summary(e); w.title=summary(e);
-    const del=document.createElement("button"); del.className="link"; del.type="button"; del.textContent="Supprimer";
+    const meta=document.createElement("div"); meta.className="meta";
+    const d=new Date(e.createdAt), t=document.createElement("span");
+    t.textContent=d.toLocaleDateString("fr-CH",{weekday:"short",day:"numeric",month:"numeric"})+" · "+d.toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"});
+    const del=document.createElement("button"); del.className="ghost"; del.type="button"; del.textContent="Supprimer";
     del.onclick=async ()=>{
-      if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent="Confirmer la suppression"; setTimeout(()=>{delete del.dataset.arm; del.textContent="Supprimer";},4000); return; }
+      if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent="Confirmer ?"; setTimeout(()=>{delete del.dataset.arm; del.textContent="Supprimer";},4000); return; }
       del.disabled=true;
       try{ await api("DELETE","key="+encodeURIComponent(e.key)); await load(); }catch(err){ del.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); }
     };
-    li.append(t,w,del); ul.append(li);
+    meta.append(t,del);
+    const w=document.createElement("div"); w.className="what"; w.textContent=summary(e);
+    li.append(meta,w); ul.append(li);
   });
 }
 
 // ---------- The e-mail, in the format of Astrid's weekly mail ----------
 const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const F='font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#000000;';
-const P=(html)=>'<p style="'+F+'margin:0 0 10px 0;">'+html+'</p>';
+const P=h=>'<p style="'+F+'margin:0 0 10px 0;">'+h+'</p>';
 const para=t=>esc(t).split(/\n\s*\n/).map(b=>P(b.replace(/\n/g,"<br>"))).join("");
 const media=k=>location.origin+"/api/media/"+k;
-function bullets(items,bold){
-  return '<ul style="'+F+'margin:14px 0 8px 0;padding-left:24px;">'+items.map(t=>'<li style="'+F+'margin:0 0 4px 0;">'+(bold?'<b>'+esc(t)+'</b>':esc(t))+'</li>').join("")+'</ul>';
-}
+const bullets=(items,bold)=>'<ul style="'+F+'margin:14px 0 8px 0;padding-left:24px;">'+items.map(t=>'<li style="'+F+'margin:0 0 4px 0;">'+(bold?'<b>'+esc(t)+'</b>':esc(t))+'</li>').join("")+'</ul>';
+const imgTag=(src,w,alt)=>'<img src="'+src+'" width="'+w+'" alt="'+esc(alt)+'" style="width:'+w+'px;max-width:100%;height:auto;border:0;margin:0 6px 6px 0;vertical-align:top;">';
 
-// Contributors' edited previews are untrusted: keep only simple formatting, our media links and http(s) links.
+// Older contributions may carry an edited preview: keep only simple formatting, our media and http(s) links.
 function sanitize(html){
   const doc=new DOMParser().parseFromString("<div>"+(html||"")+"</div>","text/html");
   const out=document.createElement("div");
   const okMedia=v=>/^\/api\/media\/[0-9a-f-]{36}$/.test(v||"");
-  function walk(node,parent){
+  (function walk(node,parent){
     node.childNodes.forEach(n=>{
       if(n.nodeType===3){ parent.append(document.createTextNode(n.textContent)); return; }
       if(n.nodeType!==1) return;
-      const tag=n.tagName.toLowerCase();
-      let el=null;
+      const tag=n.tagName.toLowerCase(); let el=null;
       if(tag==="p"||tag==="div"){ el=document.createElement("p"); el.setAttribute("style",F+"margin:0 0 10px 0;"); }
       else if(tag==="ul"||tag==="ol"){ el=document.createElement(tag); el.setAttribute("style",F+"margin:14px 0 8px 0;padding-left:24px;"); }
       else if(tag==="li"){ el=document.createElement("li"); el.setAttribute("style",F+"margin:0 0 4px 0;"); }
-      else if(["b","strong","i","em","u"].includes(tag)){ el=document.createElement(tag); }
+      else if(["b","strong","i","em","u"].includes(tag)) el=document.createElement(tag);
       else if(tag==="br"){ parent.append(document.createElement("br")); return; }
       else if(tag==="img"){
         const src=n.getAttribute("src"); if(!okMedia(src)) return;
-        const w=Math.min(600,Math.max(80,parseInt(n.getAttribute("width"),10)||480));
-        const img=document.createElement("img"); img.src=location.origin+src; img.width=w; img.alt=n.getAttribute("alt")||"";
-        img.setAttribute("style","width:"+w+"px;max-width:100%;height:auto;border:0;margin:0 8px 8px 0;vertical-align:top;");
-        parent.append(img); return;
+        const w=Math.min(IMG_ONE,parseInt(n.getAttribute("width"),10)>300?IMG_ONE:IMG_MANY);
+        const t=document.createElement("template"); t.innerHTML=imgTag(location.origin+src,w,n.getAttribute("alt")||""); parent.append(t.content); return;
       }
-      else if(tag==="a"){
-        const href=n.getAttribute("href")||"";
-        if(okMedia(href)){ el=document.createElement("a"); el.href=location.origin+href; }
-        else if(/^https?:\/\//i.test(href)){ el=document.createElement("a"); el.href=href; }
-        if(el) el.setAttribute("style","color:#004993;");
-      }
-      if(!el){ walk(n,parent); return; }   // unknown tag: keep its text only
+      else if(tag==="a"){ const href=n.getAttribute("href")||"";
+        if(okMedia(href)){ el=document.createElement("a"); el.href=location.origin+href; } else if(/^https?:\/\//i.test(href)){ el=document.createElement("a"); el.href=href; }
+        if(el) el.setAttribute("style","color:#000B72;"); }
+      if(!el){ walk(n,parent); return; }
       walk(n,el); parent.append(el);
     });
-  }
-  walk(doc.body.firstChild,out);
+  })(doc.body.firstChild,out);
   return out.innerHTML;
 }
 const liTexts=html=>{ const d=new DOMParser().parseFromString(html||"","text/html"); return [...d.querySelectorAll("li")].map(li=>li.textContent.trim()).filter(Boolean); };
+
 function buildMail(){
   const H=[], O=[], Tm=[], Edited=[];
   entries.forEach(e=>{
@@ -234,43 +258,36 @@ function buildMail(){
     if(e.html && (e.html.main||e.html.outlook)){ if(e.html.main) Edited.push(sanitize(e.html.main)); liTexts(e.html.outlook).forEach(t=>O.push(t)); return; }
     (it.highlight||[]).forEach(h=>H.push(h)); (it.outlook||[]).forEach(o=>O.push(o.title)); (it.team||[]).forEach(t=>Tm.push(t));
   });
-  const seen=new Set(); const outlook=O.filter(t=>{ const k=t.toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
+  const seen=new Set(); const outlook=O.filter(t=>{ const k=(t||"").toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
+  if(!entries.length){ $("mail").innerHTML='<div class="placeholder">Le mail se construira ici à partir des contributions de la semaine.</div>'; setStatus("copyStatus",""); return; }
   let html='<div style="'+F+'">';
-  html+=P("Hallo zusammen");
+  html+=P("Hallo zusammen")+P("&nbsp;");
   html+=P("Eine vollgepackte Woche geht bald zu Ende und auch diese Woche gab es bei Feldschlösschen wieder einige Highlights:");
   H.forEach(h=>{
-    html+=bullets([h.title||h.detail.split("\n")[0]],true);
-    const detail=h.title?h.detail:h.detail.split("\n").slice(1).join("\n");
-    if(detail.trim()) html+=para(detail);
+    const detail=h.detail||"";
+    html+=bullets([h.title||detail.split("\n")[0]],true);
+    const rest=h.title?detail:detail.split("\n").slice(1).join("\n");
+    if(rest.trim()) html+=para(rest);
     const imgs=(h.media||[]).filter(m=>m.kind==="img"), vids=(h.media||[]).filter(m=>m.kind==="vid");
-    if(imgs.length){
-      const w=imgs.length===1?480:236;
-      html+='<p style="'+F+'margin:0 0 10px 0;">'+imgs.map(m=>'<img src="'+media(m.key)+'" width="'+w+'" alt="'+esc(m.name)+'" style="width:'+w+'px;max-width:100%;height:auto;border:0;margin:0 8px 8px 0;vertical-align:top;">').join("")+'</p>';
-    }
-    vids.forEach(m=>{ html+=P('▶ <a href="'+media(m.key)+'" style="color:#004993;">Video ansehen'+(m.name?' ('+esc(m.name)+')':'')+'</a>'); });
-    if(h.link) html+=P('▶ <a href="'+esc(h.link)+'" style="color:#004993;">Video / Fotos ansehen</a>');
+    if(imgs.length){ const w=imgs.length===1?IMG_ONE:IMG_MANY; html+='<p style="'+F+'margin:4px 0 10px 0;">'+imgs.map(m=>imgTag(media(m.key),w,m.name)).join("")+'</p>'; }
+    vids.forEach(m=>{ html+=P('▶ <a href="'+media(m.key)+'" style="color:#000B72;">Video ansehen</a>'); });
+    if(h.link) html+=P('▶ <a href="'+esc(h.link)+'" style="color:#000B72;">Mehr Bilder / Video</a>');
     if(h.next) html+=bullets([h.next],false);
-    html+='<p style="'+F+'margin:0 0 10px 0;">&nbsp;</p>';
+    html+=P("&nbsp;");
   });
   Edited.forEach(h=>{ html+=h; });
   if(Tm.length){
     html+=P("<b>Team</b>");
-    Tm.forEach(t=>{ html+=bullets([t.title||t.detail.split("\n")[0]],false); const d=t.title?t.detail:t.detail.split("\n").slice(1).join("\n"); if(d.trim()) html+=para(d); });
-    html+='<p style="'+F+'margin:0 0 10px 0;">&nbsp;</p>';
+    Tm.forEach(t=>{ const d=t.detail||""; html+=bullets([t.title||d.split("\n")[0]],false); const r=t.title?d:d.split("\n").slice(1).join("\n"); if(r.trim()) html+=para(r); });
+    html+=P("&nbsp;");
   }
-  if(outlook.length){
-    html+=P("<b>Ausblick auf nächste Woche</b>");
-    html+=bullets(outlook,false);
-    html+='<p style="'+F+'margin:0 0 10px 0;">&nbsp;</p>';
-  }
-  html+=P("Ich wünsche euch bereits jetzt ein schönes und erholsames Wochenende!");
-  html+=P("Liebe Grüsse<br>Astrid");
-  html+='</div>';
-  $("mail").innerHTML=entries.length?html:'<div class="empty">Le mail apparaîtra ici dès que les premières contributions de la semaine seront arrivées.</div>';
+  if(outlook.length){ html+=P("<b>Ausblick auf nächste Woche</b>")+bullets(outlook,false)+P("&nbsp;"); }
+  html+=P("Ich wünsche euch bereits jetzt ein schönes und erholsames Wochenende!")+P("&nbsp;");
+  html+=P("Liebe Grüsse<br>Astrid")+'</div>';
+  $("mail").innerHTML=html;
   setStatus("copyStatus","");
 }
 
-// Copy as rich HTML so Outlook keeps formatting and images.
 function selectMail(){ const r=document.createRange(); r.selectNodeContents($("mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
 $("copyHtml").onclick=async ()=>{
   const html=$("mail").innerHTML, text=$("mail").innerText;
@@ -284,18 +301,17 @@ $("copyHtml").onclick=async ()=>{
   }
 };
 $("copyText").onclick=async ()=>{
-  try{ await navigator.clipboard.writeText($("mail").innerText); setStatus("copyStatus","Texte copié (sans mise en forme ni photos).","ok"); }
+  try{ await navigator.clipboard.writeText($("mail").innerText); setStatus("copyStatus","Texte copié, sans mise en forme ni photos.","ok"); }
   catch(e){ selectMail(); setStatus("copyStatus","Le texte est sélectionné : copiez-le avec Ctrl+C.","err"); }
 };
-$("rebuild").onclick=buildMail;
+$("copySubject").onclick=async ()=>{ try{ await navigator.clipboard.writeText($("subject").textContent); setStatus("copyStatus","Objet copié.","ok"); }catch(e){ setStatus("copyStatus","Copie impossible : sélectionnez l'objet à la main.","err"); } };
+$("rebuild").onclick=()=>{ buildMail(); setStatus("copyStatus","Mail régénéré à partir des contributions.","ok"); };
 $("reload").onclick=load;
 $("prevW").onclick=()=>{ offset++; load(); };
 $("nextW").onclick=()=>{ if(offset>0){ offset--; load(); } };
-
 $("loginForm").onsubmit=async e=>{
   e.preventDefault();
   PW=$("pw").value.trim(); if(!PW) return;
-  setStatus("loginStatus","Vérification …");
   $("loginBox").hidden=true; $("app").hidden=false;
   if(await load()) ss.set("wh-pw",PW);
 };
