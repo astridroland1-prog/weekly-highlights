@@ -144,6 +144,8 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <button class="primary" id="sendMail" type="button">Envoyer par e-mail</button>
         <button id="copyHtml" type="button">Copier pour Outlook</button>
         <button id="copyText" type="button">Texte seul</button>
+        <button id="polishBtn" type="button">✨ Harmoniser le style</button>
+        <button class="ghost" id="origBtn" type="button" hidden>Revenir aux textes d'origine</button>
         <button class="ghost" id="rebuild" type="button">Régénérer depuis les contributions</button>
         <p class="muted" id="sendMode" style="flex-basis:100%"></p>
         <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
@@ -161,6 +163,8 @@ const $=id=>document.getElementById(id);
 const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}};
 let PW=ss.get("wh-pw")||"";
 let entries=[];
+let POLISH={};           // id -> {title, detail, at}: style-harmonised version of an entry
+let POLISH_WEEK=null, AI={configured:false};
 let CUR=null;            // week shown in the editor
 let ARCH=[];             // archive list
 let viewingArchive=false;
@@ -197,7 +201,8 @@ async function load(){
     entries=(await r.json()).items||[];
     if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
-    renderEntries(); buildMail(); probeSend(); loadArchive();
+    if(POLISH_WEEK!==W.key){ POLISH={}; POLISH_WEEK=W.key; }
+    renderEntries(); buildMail(); probeSend(); loadArchive(); probeAI();
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
@@ -239,8 +244,9 @@ const bullets=(items,bold)=>'<ul style="'+F+'margin:14px 0 8px 0;padding-left:24
 const imgTag=(src,w,alt)=>'<img src="'+src+'" width="'+w+'" alt="'+esc(alt)+'" style="width:'+w+'px;max-width:100%;height:auto;border:0;margin:0 6px 6px 0;vertical-align:top;">';
 
 function buildMail(){
-  const H=entries.filter(e=>e.section==="highlight"), Tm=entries.filter(e=>e.section==="team");
-  const O=entries.filter(e=>e.section==="outlook").map(e=>e.title);
+  const pol=e=>{ const p=POLISH[e.id]; return p && p.at===(e.updatedAt||e.createdAt) ? {...e,title:p.title,detail:p.detail} : e; };
+  const H=entries.filter(e=>e.section==="highlight").map(pol), Tm=entries.filter(e=>e.section==="team").map(pol);
+  const O=entries.filter(e=>e.section==="outlook").map(pol).map(e=>e.title);
   const seen=new Set(); const outlook=O.filter(t=>{ const k=(t||"").toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
   if(!entries.length){ $("mail").innerHTML='<div class="placeholder">Le mail se construira ici à partir des contributions de la semaine.</div>'; setStatus("copyStatus",""); return; }
   let html='<div style="'+F+'">';
@@ -394,6 +400,35 @@ $("copyText").onclick=async ()=>{
   catch(e){ selectMail(); setStatus("copyStatus","Le texte est sélectionné : copiez-le avec Ctrl+C.","err"); }
 };
 $("copySubject").onclick=async ()=>{ try{ await navigator.clipboard.writeText($("subject").textContent); setStatus("copyStatus","Objet copié.","ok"); }catch(e){ setStatus("copyStatus","Copie impossible : sélectionnez l'objet à la main.","err"); } };
+// ---------- Style harmonisation (Claude via the Anthropic API) ----------
+async function probeAI(){
+  try{ const r=await fetch("/api/rewrite",{headers:{"x-admin-password":PW}}); if(r.ok) AI=await r.json(); }catch(e){}
+  updatePolishUi();
+}
+function updatePolishUi(){
+  const n=Object.keys(POLISH).length;
+  $("origBtn").hidden=!n;
+  $("polishBtn").textContent=n?"✨ Harmoniser à nouveau":"✨ Harmoniser le style";
+}
+$("polishBtn").onclick=async ()=>{
+  if(!entries.length){ setStatus("copyStatus","Il n'y a encore aucune entrée à harmoniser.","err"); return; }
+  if(!AI.configured){ setStatus("copyStatus","L'harmonisation n'est pas encore activée : il manque la clé ANTHROPIC_API_KEY dans Netlify (voir les explications de Claude).","err"); return; }
+  const btn=$("polishBtn"); btn.disabled=true; btn.textContent="✨ Rédaction en cours … (20–40 s)";
+  setStatus("copyStatus","Claude relit et harmonise les entrées. Vos corrections manuelles dans le mail seront remplacées.","");
+  try{
+    const r=await fetch("/api/rewrite",{method:"POST",headers:{"content-type":"application/json","x-admin-password":PW},
+      body:JSON.stringify({items:entries.map(e=>({id:e.id,section:e.section,title:e.title||"",detail:e.detail||""}))})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error==="provider"?"service IA ("+j.status+")":(j.error||r.status));
+    const byId=Object.fromEntries(entries.map(e=>[e.id,e]));
+    (j.items||[]).forEach(i=>{ const e=byId[i.id]; if(e) POLISH[i.id]={title:i.title,detail:i.detail,at:e.updatedAt||e.createdAt}; });
+    buildMail(); updatePolishUi();
+    setStatus("copyStatus","Textes harmonisés ("+(j.items||[]).length+" entrées). Relisez, corrigez si besoin, puis envoyez. Les photos et les faits sont inchangés.","ok");
+  }catch(e){ setStatus("copyStatus","L'harmonisation a échoué ("+e.message+"). Le mail garde les textes d'origine.","err"); }
+  finally{ btn.disabled=false; updatePolishUi(); }
+};
+$("origBtn").onclick=()=>{ POLISH={}; buildMail(); updatePolishUi(); setStatus("copyStatus","Textes d'origine de l'équipe rétablis.","ok"); };
+
 $("rebuild").onclick=()=>{ buildMail(); setStatus("copyStatus","Mail régénéré à partir des contributions.","ok"); };
 $("reload").onclick=load;
 $("prevW").onclick=()=>{ offset++; load(); };

@@ -16,7 +16,7 @@ Outil en deux parties pour préparer le mail hebdomadaire « Weekly Highlights �
 ## Structure
 - `public/index.html` – formulaire de l'équipe
 - `public/zusammenstellen.html` – page de compilation
-- `netlify/functions/` – `send` (envoie le mail compilé via Resend si `RESEND_API_KEY` est défini ; destinataire `MAIL_TO`, par défaut astrid.roland@fgg.ch), `archive` (garde une copie de chaque compilation envoyée, par semaine), `items` (liste, ajoute, modifie les entrées), `upload` (un fichier, 4,4 Mo max.), `media` (affiche un fichier), `admin` (vérifie le mot de passe, supprime une entrée)
+- `netlify/functions/` – `rewrite` (harmonise le style des entrées avec Claude si `ANTHROPIC_API_KEY` est défini ; modèle `ANTHROPIC_MODEL`, par défaut claude-sonnet-5-5), `send` (envoie le mail compilé via Resend si `RESEND_API_KEY` est défini ; destinataire `MAIL_TO`, par défaut astrid.roland@fgg.ch), `archive` (garde une copie de chaque compilation envoyée, par semaine), `items` (liste, ajoute, modifie les entrées), `upload` (un fichier, 4,4 Mo max.), `media` (affiche un fichier), `admin` (vérifie le mot de passe, supprime une entrée)
 - Mot de passe de la compilation : variable d'environnement `ADMIN_PASSWORD` dans Netlify (Project configuration → Environment variables). Après un changement, redéployer.
 
 Chaque modification poussée sur `main` est mise en ligne automatiquement par Netlify.
