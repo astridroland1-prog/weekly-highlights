@@ -132,6 +132,11 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <h2>Entrées de la semaine</h2>
         <ul class="entries" id="entries"></ul>
       </section>
+      <section class="card" id="binCard" hidden>
+        <h2>Corbeille</h2>
+        <p class="muted">Entrées supprimées cette semaine, par l'équipe ou par vous. Elles n'apparaissent plus dans le mail.</p>
+        <ul class="entries" id="binList"></ul>
+      </section>
       <section class="card">
         <h2>Archives</h2>
         <p class="muted">Chaque compilation envoyée est gardée ici.</p>
@@ -203,7 +208,7 @@ async function load(){
     if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
     if(POLISH_WEEK!==W.key){ POLISH={}; POLISH_WEEK=W.key; }
-    renderEntries(); buildMail(); probeSend(); loadArchive(); probeAI();
+    renderEntries(); buildMail(); probeSend(); loadArchive(); probeAI(); loadBin(W.key);
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
@@ -212,6 +217,27 @@ async function load(){
   }
 }
 const SEC={highlight:"Highlight",outlook:"Ausblick",team:"Team"};
+// ---------- Bin (soft-deleted entries) ----------
+async function loadBin(week){
+  let bin=[];
+  try{ const r=await fetch("/api/items?bin=1&week="+encodeURIComponent(week)+"&t="+Date.now(),{headers:{"x-admin-password":PW},cache:"no-store"}); if(r.ok) bin=(await r.json()).items||[]; }catch(e){}
+  $("binCard").hidden=!bin.length;
+  const ul=$("binList"); ul.innerHTML="";
+  bin.forEach(e=>{
+    const li=document.createElement("li");
+    const meta=document.createElement("div"); meta.className="meta";
+    const t=document.createElement("span"); t.textContent=SEC[e.section]+" · supprimée le "+new Date(e.deletedAt).toLocaleDateString("fr-CH",{day:"numeric",month:"numeric"})+" "+new Date(e.deletedAt).toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"});
+    const act=document.createElement("span");
+    const rs=document.createElement("button"); rs.className="ghost"; rs.type="button"; rs.textContent="Restaurer"; rs.style.color="var(--ok)";
+    rs.onclick=async ()=>{ rs.disabled=true; try{ const r=await fetch("/api/items?restore=1&id="+encodeURIComponent(e.id),{method:"PUT",headers:{"x-admin-password":PW}}); if(!r.ok) throw 0; await load(); }catch(err){ rs.disabled=false; setStatus("status","Restauration impossible. Réessayez.","err"); } };
+    const rm=document.createElement("button"); rm.className="ghost"; rm.type="button"; rm.textContent="Définitivement";
+    rm.onclick=async ()=>{ if(!rm.dataset.arm){ rm.dataset.arm="1"; rm.textContent="Confirmer ?"; setTimeout(()=>{delete rm.dataset.arm; rm.textContent="Définitivement";},4000); return; }
+      rm.disabled=true; try{ await api("DELETE","id="+encodeURIComponent(e.id)); await load(); }catch(err){ rm.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); } };
+    act.append(rs,rm); meta.append(t,act);
+    const w=document.createElement("div"); w.className="what"; w.textContent=e.title||(e.detail||"").slice(0,80);
+    li.append(meta,w); ul.append(li);
+  });
+}
 function renderEntries(){
   const hl=entries.filter(e=>e.section==="highlight");
   $("nEntries").textContent=entries.length; $("nHl").textContent=hl.length;
@@ -227,7 +253,7 @@ function renderEntries(){
     del.onclick=async ()=>{
       if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent="Confirmer ?"; setTimeout(()=>{delete del.dataset.arm; del.textContent="Supprimer";},4000); return; }
       del.disabled=true;
-      try{ await api("DELETE","id="+encodeURIComponent(e.id)); await load(); }catch(err){ del.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); }
+      try{ const res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE"}); if(!res.ok&&res.status!==404) throw 0; await load(); }catch(err){ del.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); }
     };
     meta.append(t,del);
     const w=document.createElement("div"); w.className="what"; w.textContent=e.title||(e.detail||"").slice(0,80);

@@ -1,5 +1,7 @@
-// Shared weekly board: everyone with the link can list, add and edit entries.
+// Shared weekly board: everyone with the link can list, add, edit and delete entries.
 // GET /api/items?week=YYYY-Www  ·  POST /api/items  ·  PUT /api/items?id=…  (If-Match: etag)
+// DELETE /api/items?id=…  moves an entry to the bin (soft delete).
+// Astrid only (x-admin-password): GET ?week=…&bin=1 lists the bin · PUT ?id=…&restore=1 restores an entry.
 import { getStore } from "@netlify/blobs";
 
 const SECTIONS = ["highlight", "outlook", "team"];
@@ -26,6 +28,15 @@ async function etagOf(s, id) {
   return (m && m.etag) || "";
 }
 
+function same(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+const isAdmin = (req) => { const p = Netlify.env.get("ADMIN_PASSWORD"); return !!p && same(req.headers.get("x-admin-password") || "", p); };
+const ID = /^\d{4}-W\d{2}\/[\w-]+$/;
+
 export default async (req) => {
   const url = new URL(req.url);
   const s = store();
@@ -33,13 +44,36 @@ export default async (req) => {
   if (req.method === "GET") {
     const week = url.searchParams.get("week") || "";
     if (!/^\d{4}-W\d{2}$/.test(week)) return Response.json({ error: "week" }, { status: 400 });
+    const bin = url.searchParams.get("bin") === "1";
+    if (bin && !isAdmin(req)) return Response.json({ error: "password" }, { status: 401 });
     const { blobs } = await s.list({ prefix: week + "/" });
     const items = [];
     for (const b of blobs.sort((x, y) => x.key.localeCompare(y.key))) {
       const r = await s.getWithMetadata(b.key, { type: "json" });
-      if (r && r.data) items.push({ ...r.data, etag: r.etag });
+      if (r && r.data && !!r.data.deleted === bin) items.push({ ...r.data, etag: r.etag });
     }
     return Response.json({ week, items }, { headers: { "cache-control": "no-store" } });
+  }
+
+  if (req.method === "DELETE") {
+    const id = url.searchParams.get("id") || "";
+    if (!ID.test(id)) return Response.json({ error: "id" }, { status: 400 });
+    const cur = await s.getWithMetadata(id, { type: "json" });
+    if (!cur || !cur.data) return Response.json({ error: "gone" }, { status: 404 });
+    const item = { ...cur.data, deleted: true, deletedAt: new Date().toISOString() };
+    await s.setJSON(id, item);
+    return Response.json({ ok: true });
+  }
+
+  if (req.method === "PUT" && url.searchParams.get("restore") === "1") {
+    if (!isAdmin(req)) return Response.json({ error: "password" }, { status: 401 });
+    const id = url.searchParams.get("id") || "";
+    if (!ID.test(id)) return Response.json({ error: "id" }, { status: 400 });
+    const cur = await s.getWithMetadata(id, { type: "json" });
+    if (!cur || !cur.data) return Response.json({ error: "gone" }, { status: 404 });
+    const { deleted, deletedAt, ...rest } = cur.data;
+    await s.setJSON(id, { ...rest, updatedAt: new Date().toISOString() });
+    return Response.json({ ok: true });
   }
 
   let body;
@@ -59,9 +93,9 @@ export default async (req) => {
 
   if (req.method === "PUT") {
     const id = url.searchParams.get("id") || "";
-    if (!/^\d{4}-W\d{2}\/[\w-]+$/.test(id)) return Response.json({ error: "id" }, { status: 400 });
+    if (!ID.test(id)) return Response.json({ error: "id" }, { status: 400 });
     const cur = await s.getWithMetadata(id, { type: "json" });
-    if (!cur || !cur.data) return Response.json({ error: "gone" }, { status: 404 });
+    if (!cur || !cur.data || cur.data.deleted) return Response.json({ error: "gone" }, { status: 404 });
     const etag = req.headers.get("if-match") || "";
     if (etag && etag !== cur.etag) return Response.json({ error: "conflict", item: { ...cur.data, etag: cur.etag } }, { status: 409 });
     const f = fields(cur.data.section, body);
@@ -78,4 +112,4 @@ export default async (req) => {
   return new Response("Method not allowed", { status: 405 });
 };
 
-export const config = { path: "/api/items", method: ["GET", "POST", "PUT"] };
+export const config = { path: "/api/items", method: ["GET", "POST", "PUT", "DELETE"] };

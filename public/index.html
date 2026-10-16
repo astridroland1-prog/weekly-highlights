@@ -33,6 +33,7 @@ button:disabled{opacity:.55;cursor:wait}
 .primary:hover:not(:disabled){background:var(--brand-hover)}
 .ghost{background:transparent;border:0;color:var(--muted);font-weight:500;font-size:14px;padding:4px 6px}
 .ghost:hover{color:var(--red)}
+.ghost.danger{color:var(--red)}
 
 /* Brand band */
 .band{background:linear-gradient(180deg,rgba(0,11,114,.35),rgba(0,11,114,.7)),#000B72 url("/assets/pattern.jpg") center/cover;color:#fff;border-bottom:4px solid #B1934B}
@@ -184,7 +185,7 @@ const T = {
       updated:"Stand", entries:["Eintrag","Einträge"], changed:"geändert", added:"erstellt", justNow:"gerade eben", minAgo:"vor {n} Min.", hAgo:"vor {n} Std.",
       empty:"Bitte zuerst etwas eintragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Eintrag.",
       saveFail:"Speichern hat nicht geklappt. Bitte nochmals versuchen.", conflict:"Jemand hat diesen Eintrag gerade geändert. Die neue Version wird angezeigt – bitte deine Ergänzung nochmals einfügen.",
-      similar:"Ähnlicher Eintrag schon vorhanden:", useIt:"Diesen ergänzen", unsaved:"Ungespeicherte Änderungen gehen verloren. Trotzdem schliessen?", photos:"Fotos"},
+      del:"Eintrag löschen", delConfirm:"Wirklich löschen?", deleted:"Gelöscht ✓", delFail:"Löschen hat nicht geklappt. Bitte nochmals versuchen.", similar:"Ähnlicher Eintrag schon vorhanden:", useIt:"Diesen ergänzen", unsaved:"Ungespeicherte Änderungen gehen verloren. Trotzdem schliessen?", photos:"Fotos"},
   fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Vous voyez ici tout ce que l'équipe a déjà saisi. Complétez les entrées existantes ou ajoutez-en de nouvelles – "+RECIPIENT_NAME+" en fera les Weekly Highlights.",
       edit:"Modifier / compléter", save:"Enregistrer", saving:"Enregistrement …", cancel:"Annuler", remove:"Retirer", saved:"Enregistré ✓", uploading:"Envoi des photos",
       media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
@@ -192,7 +193,7 @@ const T = {
       updated:"Mis à jour", entries:["entrée","entrées"], changed:"modifié", added:"créé", justNow:"à l'instant", minAgo:"il y a {n} min", hAgo:"il y a {n} h",
       empty:"Saisissez d'abord quelque chose.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par entrée.",
       saveFail:"L'enregistrement n'a pas abouti. Réessayez.", conflict:"Quelqu'un vient de modifier cette entrée. La nouvelle version s'affiche – ajoutez à nouveau votre complément.",
-      similar:"Une entrée semblable existe déjà :", useIt:"Compléter celle-ci", unsaved:"", photos:"photos"}
+      del:"Supprimer l'entrée", delConfirm:"Vraiment supprimer ?", deleted:"Supprimé ✓", delFail:"La suppression n'a pas abouti. Réessayez.", similar:"Une entrée semblable existe déjà :", useIt:"Compléter celle-ci", unsaved:"", photos:"photos"}
 };
 
 const $=id=>document.getElementById(id);
@@ -366,7 +367,22 @@ function editor(p,L){
   const act=el("div","actions");
   const sv=el("button","primary",e.busy?tr("saving"):tr("save")); sv.type="button"; sv.disabled=e.busy; sv.onclick=saveEdit;
   const cc=el("button","ghost",tr("cancel")); cc.type="button"; cc.disabled=e.busy; cc.onclick=()=>{ if(isDirty() && !confirmLeave()) return; stopEdit(); };
-  act.append(sv,cc); card.append(act);
+  act.append(sv,cc);
+  if(e.id){
+    const del=el("button","ghost danger",tr("del")); del.type="button"; del.disabled=e.busy; del.style.marginLeft="auto";
+    del.onclick=async ()=>{
+      if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent=tr("delConfirm"); setTimeout(()=>{ if(del.isConnected){ delete del.dataset.arm; del.textContent=tr("del"); } },4000); return; }
+      e.busy=true; render();
+      try{
+        const res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE"});
+        if(!res.ok && res.status!==404) throw new Error(res.status);
+        e.media.forEach(m=>m.blob&&m.url&&URL.revokeObjectURL(m.url));
+        editing=null; toast(tr("deleted")); await load();
+      }catch(err){ e.busy=false; e.msg=tr("delFail"); render(); }
+    };
+    act.append(del);
+  }
+  card.append(act);
   setTimeout(()=>{ if(!e.id) showSimilar(); },0);
   return card;
 }
