@@ -144,7 +144,8 @@ textarea{resize:vertical;min-height:110px}
   <div class="top">
     <div class="brand"><img src="/assets/logo.png" alt="Feldschlösschen"><div><b>Weekly Highlights</b><span>Marketing Feldschlösschen</span></div></div>
     <div class="tools">
-      <div class="chip"><span><b id="kwLabel"></b> · <span id="rangeLabel"></span></span><button id="wkToggle" type="button"></button></div>
+      <div class="chip"><span><b id="kwLabel"></b> · <span id="rangeLabel"></span></span></div>
+      <div class="lang wk" role="group" aria-label="Woche / Semaine"><button data-o="1" type="button"></button><button data-o="0" type="button"></button><button data-o="-1" type="button"></button></div>
       <div class="lang" role="group" aria-label="Sprache / Langue"><button id="langDE" type="button" aria-pressed="true">DE</button><button id="langFR" type="button" aria-pressed="false">FR</button></div>
     </div>
   </div>
@@ -156,6 +157,7 @@ textarea{resize:vertical;min-height:110px}
 </div></div>
 
 <main class="wrap">
+  <p class="hint" id="weekNote" hidden></p>
   <div class="livebar"><span id="liveInfo"></span><button class="link-btn" id="refreshBtn" type="button"></button></div>
   <div id="sections" style="display:grid;gap:22px"></div>
   <div class="footer">Merci &amp; Proscht!</div>
@@ -185,7 +187,7 @@ const T = {
   de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Hier seht ihr alles, was das Team schon eingetragen hat. Ergänzt bestehende Einträge oder fügt neue hinzu – "+RECIPIENT_NAME+" macht daraus die Weekly Highlights.",
       edit:"Bearbeiten / ergänzen", save:"Speichern", saving:"Wird gespeichert …", cancel:"Abbrechen", remove:"Entfernen", saved:"Gespeichert ✓", uploading:"Fotos werden hochgeladen",
       media:"Fotos und Videos", drop:"Fotos oder Videos hinzufügen", dropSub:"klicken oder hierher ziehen", tooBig:"zu gross", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15 Sek.) – längere bitte als Link.",
-      lastW:"Letzte Woche?", thisW:"Diese Woche", kw:"KW", refresh:"Aktualisieren", loading:"Lädt …", loadFail:"Einträge konnten nicht geladen werden. «Aktualisieren» versuchen.",
+      lastW:"Letzte Woche", thisW:"Diese Woche", nextW:"Nächste Woche", nextNote:"Ihr tragt für nächste Woche ein. Diese Einträge erscheinen in den Weekly Highlights der KW {w}.", lastNote:"Ihr tragt für letzte Woche ein (KW {w}).", kw:"KW", refresh:"Aktualisieren", loading:"Lädt …", loadFail:"Einträge konnten nicht geladen werden. «Aktualisieren» versuchen.",
       updated:"Stand", entries:["Eintrag","Einträge"], changed:"geändert", added:"erstellt", justNow:"gerade eben", minAgo:"vor {n} Min.", hAgo:"vor {n} Std.",
       empty:"Bitte zuerst etwas eintragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Eintrag.",
       saveFail:"Speichern hat nicht geklappt. Bitte nochmals versuchen.", conflict:"Jemand hat diesen Eintrag gerade geändert. Die neue Version wird angezeigt – bitte deine Ergänzung nochmals einfügen.",
@@ -193,7 +195,7 @@ const T = {
   fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Vous voyez ici tout ce que l'équipe a déjà saisi. Complétez les entrées existantes ou ajoutez-en de nouvelles – "+RECIPIENT_NAME+" en fera les Weekly Highlights.",
       edit:"Modifier / compléter", save:"Enregistrer", saving:"Enregistrement …", cancel:"Annuler", remove:"Retirer", saved:"Enregistré ✓", uploading:"Envoi des photos",
       media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
-      lastW:"Semaine passée ?", thisW:"Cette semaine", kw:"S", refresh:"Actualiser", loading:"Chargement …", loadFail:"Impossible de charger les entrées. Essayez « Actualiser ».",
+      lastW:"Semaine passée", thisW:"Cette semaine", nextW:"Semaine prochaine", nextNote:"Vous saisissez pour la semaine prochaine. Ces entrées paraîtront dans les Weekly Highlights de la S{w}.", lastNote:"Vous saisissez pour la semaine passée (S{w}).", kw:"S", refresh:"Actualiser", loading:"Chargement …", loadFail:"Impossible de charger les entrées. Essayez « Actualiser ».",
       updated:"Mis à jour", entries:["entrée","entrées"], changed:"modifié", added:"créé", justNow:"à l'instant", minAgo:"il y a {n} min", hAgo:"il y a {n} h",
       empty:"Saisissez d'abord quelque chose.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par entrée.",
       saveFail:"L'enregistrement n'a pas abouti. Réessayez.", conflict:"Quelqu'un vient de modifier cette entrée. La nouvelle version s'affiche – ajoutez à nouveau votre complément.",
@@ -317,7 +319,8 @@ function render(){
   document.documentElement.lang=lang;
   ["script","hero","heroSub"].forEach(k=>$("t-"+k).textContent=tr(k));
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
-  $("wkToggle").textContent=offset===0?tr("lastW"):tr("thisW");
+  document.querySelectorAll(".wk button").forEach(b=>{ const o=+b.dataset.o; b.textContent=o===1?tr("lastW"):o===0?tr("thisW"):tr("nextW"); b.setAttribute("aria-pressed",o===offset); });
+  const wn=$("weekNote"); wn.hidden=offset===0; wn.textContent=offset<0?tr("nextNote").replace("{w}",W.week):tr("lastNote").replace("{w}",W.week);
   $("langDE").setAttribute("aria-pressed",lang==="de"); $("langFR").setAttribute("aria-pressed",lang==="fr");
   $("refreshBtn").textContent="↻ "+tr("refresh");
   $("liveInfo").textContent=loadError?tr("loadFail"):!loadedAt?tr("loading"):items.length+" "+tr("entries")[items.length===1?0:1]+" · "+tr("updated")+" "+loadedAt.toLocaleTimeString(lang==="fr"?"fr-CH":"de-CH",{hour:"2-digit",minute:"2-digit"});
@@ -410,7 +413,7 @@ let toastTimer;
 function toast(msg,kind){ const t=$("toast"); t.textContent=msg; t.className="toast"+(kind?" "+kind:""); t.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.hidden=true,3500); }
 
 $("refreshBtn").onclick=()=>{ if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } load(); };
-$("wkToggle").onclick=()=>{ if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } offset=offset?0:1; W=weekInfo(offset); items=[]; loadedAt=null; render(); load(); };
+document.querySelectorAll(".wk button").forEach(b=>b.onclick=()=>{ const o=+b.dataset.o; if(o===offset) return; if(editing){ if(isDirty() && !confirmLeave()) return; editing=null; } offset=o; W=weekInfo(offset); items=[]; loadedAt=null; render(); load(); });
 $("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
 $("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
 window.addEventListener("beforeunload",ev=>{ if(isDirty()){ ev.preventDefault(); ev.returnValue=""; } });
