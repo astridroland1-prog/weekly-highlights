@@ -27,7 +27,7 @@ export default async (req) => {
   const expected = Netlify.env.get("ADMIN_PASSWORD");
   if (!expected || !same(req.headers.get("x-admin-password") || "", expected)) return Response.json({ error: "password" }, { status: 401 });
   const key = Netlify.env.get("ANTHROPIC_API_KEY");
-  if (req.method === "GET") return Response.json({ configured: !!key });
+  if (req.method === "GET") return Response.json({ configured: !!key }, { headers: { "cache-control": "no-store" } });
   if (!key) return Response.json({ error: "not_configured" }, { status: 501 });
 
   let body;

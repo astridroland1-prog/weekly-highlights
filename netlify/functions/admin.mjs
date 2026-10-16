@@ -17,7 +17,7 @@ export default async (req) => {
     if (!/^\d{4}-W\d{2}\/[\w-]+$/.test(id)) return Response.json({ error: "id" }, { status: 400 });
     await getStore({ name: "wh-items", consistency: "strong" }).delete(id);
   }
-  return Response.json({ ok: true });
+  return Response.json({ ok: true }, { headers: { "cache-control": "no-store" } });
 };
 
 export const config = { path: "/api/admin", method: ["GET", "DELETE"] };

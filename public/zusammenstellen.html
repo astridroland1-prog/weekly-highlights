@@ -148,6 +148,7 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <button class="ghost" id="origBtn" type="button" hidden>Revenir aux textes d'origine</button>
         <button class="ghost" id="rebuild" type="button">Régénérer depuis les contributions</button>
         <p class="muted" id="sendMode" style="flex-basis:100%"></p>
+        <p class="muted" id="aiMode" style="flex-basis:100%;margin-top:-6px"></p>
         <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
       </div>
       <div class="banner" id="archBanner" hidden><span id="archInfo"></span><button type="button" id="archBack">Revenir à la compilation en cours</button></div>
@@ -342,7 +343,7 @@ $("archBack").onclick=()=>leaveArchive(true);
 // ---------- Send ----------
 let SEND={configured:false,to:"astrid.roland@fgg.ch"};
 async function probeSend(){
-  try{ const r=await fetch("/api/send",{headers:{"x-admin-password":PW}}); if(r.ok) SEND=await r.json(); }catch(e){}
+  try{ const r=await fetch("/api/send",{headers:{"x-admin-password":PW},cache:"no-store"}); if(r.ok) SEND=await r.json(); }catch(e){}
   $("sendMail").textContent="Envoyer à "+SEND.to;
   $("sendMode").textContent=SEND.configured
     ? "Envoi direct activé : le mail complet, photos comprises, part en un clic."
@@ -402,10 +403,12 @@ $("copyText").onclick=async ()=>{
 $("copySubject").onclick=async ()=>{ try{ await navigator.clipboard.writeText($("subject").textContent); setStatus("copyStatus","Objet copié.","ok"); }catch(e){ setStatus("copyStatus","Copie impossible : sélectionnez l'objet à la main.","err"); } };
 // ---------- Style harmonisation (Claude via the Anthropic API) ----------
 async function probeAI(){
-  try{ const r=await fetch("/api/rewrite",{headers:{"x-admin-password":PW}}); if(r.ok) AI=await r.json(); }catch(e){}
+  try{ const r=await fetch("/api/rewrite",{headers:{"x-admin-password":PW},cache:"no-store"}); if(r.ok) AI=await r.json(); }catch(e){}
   updatePolishUi();
 }
 function updatePolishUi(){
+  $("polishBtn").title=AI.configured?"Claude relit et harmonise toutes les entrées de la semaine":"Activez d'abord la clé ANTHROPIC_API_KEY dans Netlify";
+  $("aiMode").textContent=AI.configured?"Harmonisation du style activée.":"Harmonisation du style pas encore activée (clé Anthropic manquante ou site pas encore relancé).";
   const n=Object.keys(POLISH).length;
   $("origBtn").hidden=!n;
   $("polishBtn").textContent=n?"✨ Harmoniser à nouveau":"✨ Harmoniser le style";

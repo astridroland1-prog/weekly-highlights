@@ -12,7 +12,7 @@ export default async (req) => {
   if (!expected || !same(req.headers.get("x-admin-password") || "", expected)) return Response.json({ error: "password" }, { status: 401 });
   const key = Netlify.env.get("RESEND_API_KEY");
   const to = Netlify.env.get("MAIL_TO") || "astrid.roland@fgg.ch";
-  if (req.method === "GET") return Response.json({ configured: !!key, to });
+  if (req.method === "GET") return Response.json({ configured: !!key, to }, { headers: { "cache-control": "no-store" } });
   if (!key) return Response.json({ error: "not_configured", to }, { status: 501 });
   let body;
   try { body = await req.json(); } catch { return Response.json({ error: "json" }, { status: 400 }); }
