@@ -108,14 +108,6 @@ details summary{cursor:pointer;color:var(--muted);font-size:15px}
 </head>
 <body>
 
-<!-- Static copy of the form so Netlify registers it at deploy time. Field names must match what the script sends. -->
-<form name="weekly-highlights" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" hidden>
-  <input name="bot-field"><input name="subject"><input name="name"><input type="email" name="email"><input name="week">
-  <textarea name="contribution"></textarea>
-  <input type="file" name="media1"><input type="file" name="media2"><input type="file" name="media3"><input type="file" name="media4">
-  <input type="file" name="media5"><input type="file" name="media6"><input type="file" name="media7"><input type="file" name="media8">
-</form>
-
 <div class="band"><div class="wrap">
   <header>
     <div class="brand"><h1>Weekly Highlights</h1><p>Marketing Feldschlösschen</p></div>
@@ -134,26 +126,16 @@ details summary{cursor:pointer;color:var(--muted);font-size:15px}
 
 <main class="wrap">
   <div id="formArea" style="display:grid;gap:26px">
-    <div class="card">
-      <div class="row2">
-        <label for="name"><span id="t-name"></span><input id="name" autocomplete="name"></label>
-        <label for="email"><span><span id="t-email"></span> <small id="t-emailHint"></small></span><input id="email" type="email" autocomplete="email"></label>
-      </div>
-    </div>
     <div id="sections" style="display:grid;gap:26px"></div>
     <div class="send">
       <h3 id="t-sendTitle"></h3>
       <p class="muted" id="t-sendHint"></p>
-      <div id="meterBox" hidden><div class="meter" id="meter"><i></i></div><span class="muted" id="meterLabel"></span></div>
       <div class="bar">
         <button class="primary" id="sendBtn" type="button"></button>
         <button class="link" id="resetBtn" type="button"></button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <span class="saved" id="saved"></span>
-      <details id="previewBox"><summary id="t-preview"></summary><pre id="preview"></pre>
-        <div class="bar" style="margin-top:10px"><button id="copyBtn" type="button"></button></div>
-      </details>
     </div>
   </div>
   <div class="done" id="doneBox" hidden>
@@ -166,41 +148,39 @@ details summary{cursor:pointer;color:var(--muted);font-size:15px}
 
 <script>
 const RECIPIENT_NAME = "Astrid";
-const MAX_BYTES = 7.5*1024*1024;   // Netlify accepts at most 8 MB per submission
-const MAX_FILES = 8;               // one file per form field: media1 … media8
+const MAX_FILE = 4.4*1024*1024;   // per file (server limit)
+const MAX_FILES = 10;             // per contribution
 
 const PARTS = [
-  {id:"highlight", n:1, fields:["title","detail","kpi","next","link"], media:true,
-   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Punkt pro Thema.", title:"Worum geht's?", titlePh:"Eine Runde auf uns – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Z. B.: Sechste Runde unserer Gastro-Aktion, 9 KEG in gut zwei Stunden. Danke an alle!", kpi:"Wichtigste Zahl", kpiPh:"9 KEG in 2 Std.", next:"Nächster Termin", nextPh:"Letzter Halt: Delémont am 10.09.", link:"Link zu Video oder Ordner", linkPh:"OneDrive-, SharePoint- oder WeTransfer-Link", add:"+ Weiteres Highlight", item:"Highlight"},
-   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un point par sujet.", title:"De quoi s'agit-il ?", titlePh:"Une tournée offerte – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"P. ex. : 6e étape de notre action gastro, 9 KEG en à peine deux heures. Merci à toutes et à tous !", kpi:"Chiffre clé", kpiPh:"9 KEG en 2 h", next:"Prochaine date", nextPh:"Dernière étape : Delémont le 10.09.", link:"Lien vers une vidéo ou un dossier", linkPh:"Lien OneDrive, SharePoint ou WeTransfer", add:"+ Ajouter un temps fort", item:"Temps fort"}},
+  {id:"highlight", n:1, fields:["title","detail","next","link"], media:true,
+   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Punkt pro Thema.", title:"Titel", titlePh:"Eine Runde auf uns in der Gastro – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Im McArthur's Pub in Lenzburg fand bereits die sechste Runde unserer Gastro-Aktion statt …", next:"Nächster Termin (optional)", nextPh:"Nächster und letzter Halt: Delémont am 10.09.", link:"Link zu einem längeren Video (optional)", linkPh:"OneDrive-, SharePoint- oder WeTransfer-Link", add:"+ Weiteres Highlight", item:"Highlight"},
+   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un point par sujet.", title:"Titre", titlePh:"Une tournée offerte en gastro – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"La sixième étape de notre action gastro a eu lieu au McArthur's Pub de Lenzburg …", next:"Prochaine date (facultatif)", nextPh:"Prochaine et dernière étape : Delémont le 10.09.", link:"Lien vers une vidéo plus longue (facultatif)", linkPh:"Lien OneDrive, SharePoint ou WeTransfer", add:"+ Ajouter un temps fort", item:"Temps fort"}},
   {id:"outlook", n:2, fields:["title"],
-   de:{name:"Ausblick nächste Woche", hint:"Was steht nächste Woche an? Eine Zeile reicht.", title:"Was steht an?", titlePh:"OLMA-Vorbereitungen", add:"+ Weiterer Punkt", item:"Ausblick"},
-   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne suffit.", title:"Qu'est-ce qui est prévu ?", titlePh:"Préparatifs OLMA", add:"+ Ajouter un point", item:"Point"}},
+   de:{name:"Ausblick nächste Woche", hint:"Was steht nächste Woche an? Eine Zeile pro Punkt.", title:"Was steht an?", titlePh:"OLMA-Vorbereitungen", add:"+ Weiterer Punkt", item:"Ausblick"},
+   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne par point.", title:"Qu'est-ce qui est prévu ?", titlePh:"Préparatifs OLMA", add:"+ Ajouter un point", item:"Point"}},
   {id:"team", n:3, fields:["title","detail"],
    de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", add:"+ Weitere Team-News", item:"Team-News"},
    fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", add:"+ Ajouter une nouvelle", item:"Nouvelle"}}
 ];
 const T = {
-  de:{script:"Proscht!", hero:"Dein Beitrag für diese Woche", heroSub:"Fülle aus, was du hast – leere Felder werden ignoriert. Mit «Senden» geht dein Beitrag samt Fotos direkt an "+RECIPIENT_NAME+".",
-      name:"Dein Name", email:"Deine E-Mail", emailHint:"(optional, für Rückfragen)", sendTitle:"Fertig?", sendHint:"Ein Klick genügt: Text, Fotos und Videos werden direkt an "+RECIPIENT_NAME+" geschickt.",
-      send:"Senden", sending:"Wird gesendet …", reset:"Alles leeren", preview:"Vorschau des Textes", copy:"Text kopieren", remove:"Entfernen",
-      media:"Fotos und Videos", drop:"Fotos oder Videos auswählen – oder hierher ziehen", tooBig:"zu gross", photoNote:"Fotos werden automatisch verkleinert. Videos: max. 7,5 MB insgesamt – grössere Videos bitte als Link angeben.",
-      thisW:"Diese Woche", lastW:"Letzte Woche",
-      needName:"Bitte zuerst deinen Namen eintragen.", empty:"Du hast noch nichts eingetragen.",
-      overLimit:"Die Dateien sind zusammen zu gross (max. 7,5 MB). Bitte ein Video entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
-      sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen. Falls es wieder scheitert: Vorschau öffnen, Text kopieren und per Mail an "+RECIPIENT_NAME+" schicken.",
-      doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Neuen Beitrag erfassen",
-      copied:"Kopiert.", copyFail:"Text markiert – mit Strg+C kopieren.", confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", total:"von 7,5 MB", kw:"KW"},
-  fr:{script:"Santé !", hero:"Votre contribution de la semaine", heroSub:"Remplissez ce que vous avez – les champs vides sont ignorés. Avec « Envoyer », votre contribution part directement chez "+RECIPIENT_NAME+", photos comprises.",
-      name:"Votre nom", email:"Votre e-mail", emailHint:"(facultatif, pour les questions)", sendTitle:"C'est prêt ?", sendHint:"Un clic suffit : le texte, les photos et les vidéos sont envoyés directement à "+RECIPIENT_NAME+".",
-      send:"Envoyer", sending:"Envoi en cours …", reset:"Tout effacer", preview:"Aperçu du texte", copy:"Copier le texte", remove:"Retirer",
-      media:"Photos et vidéos", drop:"Choisir des photos ou des vidéos – ou les glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos : 7,5 Mo au total au maximum – pour une vidéo plus lourde, indiquez un lien.",
-      thisW:"Cette semaine", lastW:"Semaine passée",
-      needName:"Indiquez d'abord votre nom.", empty:"Vous n'avez encore rien saisi.",
-      overLimit:"Les fichiers sont trop lourds au total (7,5 Mo au maximum). Retirez une vidéo et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
-      sendFail:"L'envoi n'a pas abouti. Réessayez. Si cela échoue encore : ouvrez l'aperçu, copiez le texte et envoyez-le par e-mail à "+RECIPIENT_NAME+".",
-      doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une nouvelle contribution",
-      copied:"Copié.", copyFail:"Texte sélectionné – copiez-le avec Ctrl+C.", confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", total:"sur 7,5 Mo", kw:"S"}
+  de:{script:"Proscht!", hero:"Dein Beitrag für diese Woche", heroSub:"Fülle aus, was du hast – leere Felder werden ignoriert. Mit «Senden» gehen Text, Fotos und Videos direkt an "+RECIPIENT_NAME+".",
+      sendTitle:"Fertig?", sendHint:"Ein Klick genügt. "+RECIPIENT_NAME+" stellt daraus die Weekly Highlights fürs ganze Marketing zusammen.",
+      send:"Senden", sending:"Wird gesendet …", uploading:"Dateien werden hochgeladen", reset:"Alles leeren", remove:"Entfernen",
+      media:"Fotos und Videos", drop:"Fotos oder Videos auswählen – oder hierher ziehen", tooBig:"zu gross (max. 4,4 MB)", photoNote:"Fotos werden automatisch verkleinert. Videos bis 4,4 MB (ca. 15–20 Sek.) – längere bitte als Link angeben.",
+      thisW:"Diese Woche", lastW:"Letzte Woche", empty:"Du hast noch nichts eingetragen.",
+      fileTooBig:"Mindestens eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
+      sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen – dein Entwurf ist gespeichert.",
+      doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Weiteren Beitrag erfassen",
+      confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", files:"Dateien", kw:"KW"},
+  fr:{script:"Santé !", hero:"Votre contribution de la semaine", heroSub:"Remplissez ce que vous avez – les champs vides sont ignorés. Avec « Envoyer », le texte, les photos et les vidéos partent directement chez "+RECIPIENT_NAME+".",
+      sendTitle:"C'est prêt ?", sendHint:"Un clic suffit. "+RECIPIENT_NAME+" en tire les Weekly Highlights pour tout le marketing.",
+      send:"Envoyer", sending:"Envoi en cours …", uploading:"Envoi des fichiers", reset:"Tout effacer", remove:"Retirer",
+      media:"Photos et vidéos", drop:"Choisir des photos ou des vidéos – ou les glisser ici", tooBig:"trop lourd (4,4 Mo max.)", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15–20 s) – pour une vidéo plus longue, indiquez un lien.",
+      thisW:"Cette semaine", lastW:"Semaine passée", empty:"Vous n'avez encore rien saisi.",
+      fileTooBig:"Au moins un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
+      sendFail:"L'envoi n'a pas abouti. Réessayez – votre brouillon est conservé.",
+      doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une autre contribution",
+      confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", files:"fichiers", kw:"S"}
 };
 
 const $=id=>document.getElementById(id);
@@ -218,26 +198,22 @@ function weekInfo(offset){
 }
 let offset=0, W=weekInfo(0);
 
-// Files live only in memory (browsers cannot keep them in a saved draft).
-const FILES=new WeakMap();   // item object -> [{name, blob, kind, url}]
+// Files live only in memory (a saved draft cannot hold them).
+const FILES=new WeakMap();
 const filesOf=it=>{ if(!FILES.has(it)) FILES.set(it,[]); return FILES.get(it); };
 const mb=b=>(b/1048576).toLocaleString(lang==="fr"?"fr-CH":"de-CH",{maximumFractionDigits:1})+" MB";
 
 const blank=()=>({highlight:[{}],outlook:[{}],team:[{}]});
 function loadDraft(){ try{ const s=JSON.parse(store.get("whb-draft")||"null"); if(s&&s.week===W.key&&s.items) return s.items; }catch(e){} return blank(); }
 let state=loadDraft();
-$("name").value=store.get("whb-name")||"";
-$("email").value=store.get("whb-email")||"";
 let saveTimer;
 function save(){
   store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-  store.set("whb-name",$("name").value.trim()); store.set("whb-email",$("email").value.trim());
-  updatePreview();
   clearTimeout(saveTimer); $("saved").textContent=tr("savedAt")+" ✓";
   saveTimer=setTimeout(()=>{$("saved").textContent="";},2500);
 }
 
-// Shrink photos to max 1600 px (JPEG) so several fit under Netlify's 8 MB limit.
+// Shrink photos to max 1600 px JPEG.
 async function prepare(file){
   const isImg=file.type.startsWith("image/") && !/gif|svg/.test(file.type);
   if(isImg){
@@ -247,27 +223,27 @@ async function prepare(file){
       const c=document.createElement("canvas"); c.width=Math.round(bmp.width*scale); c.height=Math.round(bmp.height*scale);
       c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
       const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.82));
-      if(blob && blob.size<file.size) return {name:file.name.replace(/\.[^.]+$/,"")+".jpg", blob, kind:"img"};
+      if(blob && (blob.size<file.size || !/jpe?g|png|webp/.test(file.type))) return {name:file.name.replace(/\.[^.]+$/,"")+".jpg", blob, kind:"img"};
     }catch(e){}
     return {name:file.name, blob:file, kind:"img"};
   }
-  return {name:file.name, blob:file, kind:file.type.startsWith("video/")?"vid":"file"};
+  return {name:file.name, blob:file, kind:"vid"};
 }
 async function addFiles(it,list){
   const arr=filesOf(it);
   for(const f of list){
+    if(!/^(image|video)\//.test(f.type)) continue;
     if(allFiles().length>=MAX_FILES){ setStatus(tr("tooMany"),"err"); break; }
     const p=await prepare(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; arr.push(p);
   }
   render();
 }
 function allFiles(){ const out=[]; state.highlight.forEach(it=>filesOf(it).forEach(f=>out.push(f))); return out; }
-function totalBytes(){ return allFiles().reduce((s,f)=>s+f.blob.size,0); }
 
 function render(){
   document.documentElement.lang=lang;
-  ["script","hero","heroSub","name","email","emailHint","sendTitle","sendHint","preview","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
-  $("sendBtn").textContent=tr("send"); $("resetBtn").textContent=tr("reset"); $("copyBtn").textContent=tr("copy"); $("againBtn").textContent=tr("again");
+  ["script","hero","heroSub","sendTitle","sendHint","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
+  $("sendBtn").textContent=tr("send"); $("resetBtn").textContent=tr("reset"); $("againBtn").textContent=tr("again");
   $("wkThis").textContent=tr("thisW"); $("wkLast").textContent=tr("lastW");
   $("wkThis").setAttribute("aria-pressed",offset===0); $("wkLast").setAttribute("aria-pressed",offset===1);
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
@@ -290,8 +266,9 @@ function render(){
         el.addEventListener("input",()=>{ it[f]=el.value; save(); }); l.append(el); return l; };
       if(p.fields.includes("title")) card.append(mk("title"));
       if(p.fields.includes("detail")) card.append(mk("detail",true));
-      if(p.fields.includes("kpi")){ const r=document.createElement("div"); r.className="row2"; r.append(mk("kpi"),mk("next")); card.append(r); }
-      if(p.media) card.append(mediaBlock(it,p.id+"-"+ix), mk("link"));
+      if(p.media) card.append(mediaBlock(it,p.id+"-"+ix));
+      if(p.fields.includes("next")) card.append(mk("next"));
+      if(p.fields.includes("link")) card.append(mk("link"));
       sec.append(card);
     });
     const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent=L.add;
@@ -299,7 +276,6 @@ function render(){
     sec.append(add);
     box.append(sec);
   });
-  updateMeter(); updatePreview();
 }
 function mediaBlock(it,key){
   const wrap=document.createElement("div"); wrap.className="media";
@@ -313,10 +289,11 @@ function mediaBlock(it,key){
   wrap.append(input,drop);
   const list=document.createElement("ul"); list.className="files";
   filesOf(it).forEach((f,i)=>{
-    const li=document.createElement("li"); if(f.blob.size>MAX_BYTES) li.className="bad";
-    let th; if(f.url){ th=document.createElement("img"); th.src=f.url; th.alt=""; } else { th=document.createElement("span"); th.className="vid"; th.textContent=f.kind==="vid"?"🎬":"📄"; }
+    const big=f.blob.size>MAX_FILE;
+    const li=document.createElement("li"); if(big) li.className="bad";
+    let th; if(f.url){ th=document.createElement("img"); th.src=f.url; th.alt=""; } else { th=document.createElement("span"); th.className="vid"; th.textContent="🎬"; }
     const nm=document.createElement("span"); nm.className="nm"; nm.textContent=f.name;
-    const sz=document.createElement("span"); sz.className="sz"; sz.textContent=mb(f.blob.size)+(f.blob.size>MAX_BYTES?" – "+tr("tooBig"):"");
+    const sz=document.createElement("span"); sz.className="sz"; sz.textContent=mb(f.blob.size)+(big?" – "+tr("tooBig"):"");
     const rm=document.createElement("button"); rm.className="link"; rm.type="button"; rm.textContent=tr("remove");
     rm.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); filesOf(it).splice(i,1); render(); };
     li.append(th,nm,sz,rm); list.append(li);
@@ -325,75 +302,43 @@ function mediaBlock(it,key){
   const note=document.createElement("small"); note.className="muted"; note.textContent=tr("photoNote"); wrap.append(note);
   return wrap;
 }
-function updateMeter(){
-  const n=allFiles().length, b=totalBytes();
-  $("meterBox").hidden=!n;
-  $("meter").classList.toggle("over",b>MAX_BYTES);
-  $("meter").firstElementChild.style.width=Math.min(100,b/MAX_BYTES*100)+"%";
-  $("meterLabel").textContent=n+" · "+mb(b)+" "+tr("total");
+function setStatus(msg,kind){ const s=$("status"); s.textContent=msg; s.className="status"+(kind?" "+kind:""); }
+const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
+function hasContent(){
+  return state.highlight.some(i=>clean(i.title)||clean(i.detail)||filesOf(i).length) || state.outlook.some(i=>clean(i.title)) || state.team.some(i=>clean(i.title)||clean(i.detail));
 }
 
-// Fixed, machine-readable format. Headings stay German in every language so the compiled mail stays uniform.
-function buildText(){
-  const name=$("name").value.trim();
-  const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
-  const lines=["Weekly Highlights – KW "+W.week+" ("+W.key+") – von "+(name||"?"),""];
-  const heads={highlight:"HIGHLIGHTS DER WOCHE",outlook:"AUSBLICK NÄCHSTE WOCHE",team:"TEAM"};
-  let count=0, fileNo=0;
-  PARTS.forEach(p=>{
-    const items=state[p.id].filter(i=>clean(i.title)||clean(i.detail)||(p.media&&filesOf(i).length));
-    if(!items.length) return;
-    lines.push(heads[p.id]);
-    items.forEach(i=>{
-      count++;
-      const title=clean(i.title), detail=clean(i.detail);
-      lines.push("* "+(title||detail.split("\n")[0]||"(ohne Titel)"));
-      const rest=title?detail:detail.split("\n").slice(1).join("\n").trim();
-      if(rest) rest.split("\n").forEach(l=>lines.push("  "+l));
-      if(clean(i.kpi)) lines.push("  Zahl: "+clean(i.kpi));
-      if(clean(i.next)) lines.push("  Nächster Termin: "+clean(i.next));
-      if(clean(i.link)) lines.push("  Link: "+clean(i.link));
-      if(p.media){ const fs=filesOf(i); if(fs.length) lines.push("  Dateien: "+fs.map(f=>"media"+(++fileNo)+" ("+f.name+")").join(", ")); }
-    });
-    lines.push("");
-  });
-  lines.push("-- Ende Weekly Highlights --");
-  return {text:lines.join("\n"),count,name};
+async function upload(f){
+  const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":f.blob.type||"application/octet-stream","x-filename":encodeURIComponent(f.name)},body:f.blob});
+  if(!res.ok) throw new Error("upload "+res.status);
+  return (await res.json()).key;
 }
-function updatePreview(){ $("preview").textContent=buildText().text; }
-function setStatus(msg,kind){ const s=$("status"); s.textContent=msg; s.className="status"+(kind?" "+kind:""); }
 
 $("sendBtn").onclick=async ()=>{
-  const b=buildText(); $("name").classList.toggle("invalid",!b.name);
-  if(!b.name){ setStatus(tr("needName"),"err"); $("name").focus(); return; }
-  if(!b.count){ setStatus(tr("empty"),"err"); return; }
+  if(!hasContent()){ setStatus(tr("empty"),"err"); return; }
   const files=allFiles();
   if(files.length>MAX_FILES){ setStatus(tr("tooMany"),"err"); return; }
-  if(totalBytes()>MAX_BYTES){ setStatus(tr("overLimit"),"err"); return; }
-  const fd=new FormData();
-  fd.append("form-name","weekly-highlights");
-  fd.append("bot-field","");
-  fd.append("subject","Weekly Highlights KW "+W.week+" – "+b.name);
-  fd.append("name",b.name);
-  fd.append("email",$("email").value.trim());
-  fd.append("week",W.key);
-  fd.append("contribution",b.text);
-  files.forEach((f,i)=>fd.append("media"+(i+1),f.blob,f.name));
+  if(files.some(f=>f.blob.size>MAX_FILE)){ setStatus(tr("fileTooBig"),"err"); return; }
   const btn=$("sendBtn"); btn.disabled=true; btn.textContent=tr("sending"); setStatus("");
   try{
-    const res=await fetch("/",{method:"POST",body:fd});
-    if(!res.ok) throw new Error(res.status);
+    let done=0;
+    for(const f of files){
+      if(!f.key){ setStatus(tr("uploading")+" "+(done+1)+"/"+files.length+" …"); f.key=await upload(f); }
+      done++;
+    }
+    const items={
+      highlight: state.highlight.map(i=>({title:clean(i.title),detail:clean(i.detail),next:clean(i.next),link:clean(i.link),media:filesOf(i).map(f=>({key:f.key,kind:f.kind,name:f.name}))})),
+      outlook: state.outlook.map(i=>({title:clean(i.title)})),
+      team: state.team.map(i=>({title:clean(i.title),detail:clean(i.detail)}))
+    };
+    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items})});
+    if(!res.ok) throw new Error("submit "+res.status);
     files.forEach(f=>f.url&&URL.revokeObjectURL(f.url));
     state=blank(); store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-    $("formArea").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
+    setStatus(""); $("formArea").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
   }catch(e){
     setStatus(tr("sendFail"),"err");
   }finally{ btn.disabled=false; btn.textContent=tr("send"); }
-};
-$("copyBtn").onclick=()=>{
-  const text=buildText().text;
-  const fail=()=>{ const r=document.createRange(); r.selectNodeContents($("preview")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); setStatus(tr("copyFail"),"err"); };
-  try{ navigator.clipboard.writeText(text).then(()=>setStatus(tr("copied"),"ok"),fail); }catch(e){ fail(); }
 };
 $("againBtn").onclick=()=>{ $("doneBox").hidden=true; $("formArea").hidden=false; setStatus(""); render(); };
 $("resetBtn").onclick=()=>{
@@ -401,14 +346,13 @@ $("resetBtn").onclick=()=>{
   if(!r.dataset.arm){ r.dataset.arm="1"; r.textContent=tr("confirmReset"); setTimeout(()=>{delete r.dataset.arm; r.textContent=tr("reset");},4000); return; }
   delete r.dataset.arm; state=blank(); save(); render(); setStatus("");
 };
-$("name").addEventListener("input",()=>{ $("name").classList.remove("invalid"); save(); });
-$("email").addEventListener("input",save);
 function setWeek(o){ offset=o; W=weekInfo(o); state=loadDraft(); render(); setStatus(""); }
 $("wkThis").onclick=()=>setWeek(0);
 $("wkLast").onclick=()=>setWeek(1);
 $("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
 $("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
 render();
+
 </script>
 </body>
 </html>

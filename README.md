@@ -1,11 +1,21 @@
 # Weekly Highlights – Marketing Feldschlösschen
 
-Formulaire bilingue (DE/FR) avec lequel chaque membre de l'équipe marketing prépare sa contribution hebdomadaire.
+Outil en deux parties pour préparer le mail hebdomadaire « Weekly Highlights » envoyé à tout le département marketing.
 
-- **Lien pour l'équipe :** https://feldschloesschen-weekly-highlights.netlify.app/
-- **Fonctionnement :** chacun remplit les trois rubriques (Highlights der Woche, Ausblick nächste Woche, Team), clique sur « Envoyer » ; texte, photos et vidéos (7,5 Mo max.) arrivent par e-mail. Le brouillon reste dans le navigateur de la personne jusqu'à l'envoi ; les contributions envoyées sont conservées dans Netlify (Forms).
-- **Format du texte :** titres toujours en allemand et ligne de fin `-- Ende Weekly Highlights --`, pour pouvoir compiler les contributions automatiquement.
+| Page | Pour qui | Adresse |
+|---|---|---|
+| Formulaire | l'équipe | https://feldschloesschen-weekly-highlights.netlify.app/ |
+| Compilation | Astrid (mot de passe) | https://feldschloesschen-weekly-highlights.netlify.app/zusammenstellen |
 
-## Modifier le formulaire
-Tout se trouve dans `index.html`. Les contributions sont envoyées via Netlify Forms (formulaire « weekly-highlights ») ; l'adresse de réception se règle dans Netlify : Forms → Form notifications.
-Chaque modification publiée sur la branche `main` met le lien à jour en une à deux minutes.
+## Fonctionnement
+1. Chaque collègue remplit le formulaire (DE/FR) : temps forts avec photos et vidéos, points de la semaine prochaine, nouvelles de l'équipe, puis clique sur « Senden / Envoyer ». Aucun nom ni e-mail n'est demandé.
+2. Les contributions et les fichiers sont conservés dans Netlify Blobs, classés par semaine (ISO).
+3. Sur la page de compilation, Astrid voit le mail de la semaine déjà assemblé dans son format habituel (Hallo zusammen … Liebe Grüsse), photos dans le texte. Elle peut le corriger, puis « Copier pour Outlook » et le coller dans un nouveau mail.
+
+## Structure
+- `public/index.html` – formulaire de l'équipe
+- `public/zusammenstellen.html` – page de compilation
+- `netlify/functions/` – `upload` (un fichier, 4,4 Mo max.), `media` (affiche un fichier), `submit` (enregistre une contribution), `admin` (liste ou supprime, protégé)
+- Mot de passe de la compilation : variable d'environnement `ADMIN_PASSWORD` dans Netlify (Project configuration → Environment variables). Après un changement, redéployer.
+
+Chaque modification poussée sur `main` est mise en ligne automatiquement par Netlify.
