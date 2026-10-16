@@ -53,6 +53,14 @@ main.wrap{padding-block:24px 60px}
 .paper{background:#fff;color:#000;padding:36px 40px;min-height:300px;max-width:760px}
 .paper img{max-width:100%;height:auto}
 .placeholder{color:#7a7f99;text-align:center;padding:60px 20px;font-family:var(--body)}
+
+.gate{position:fixed;inset:0;z-index:50;background:rgba(0,8,60,.72);display:grid;place-items:center;padding:16px}
+.gatebox{background:#fff;color:#111633;border-radius:16px;padding:26px;max-width:420px;width:100%;display:grid;gap:12px;justify-items:center;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gatebox h2{margin:0;font:700 24px "Barlow Condensed","Arial Narrow",Arial,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:#000B72}
+.gatebox p{margin:0;font-size:14px;color:#5B6180}
+.gatebox input{font:18px "Barlow","Segoe UI",Arial,sans-serif;text-align:center;border:1px solid #DDE0EE;border-radius:10px;padding:11px 12px;width:100%}
+.gatebox .gateerr{color:#D02A12;font-weight:600}
+.gatebtn{background:#000B72;color:#fff;border:0;border-radius:10px;padding:11px 28px;font:600 17px "Barlow","Segoe UI",Arial,sans-serif;cursor:pointer}
 </style>
 </head>
 <body>
@@ -73,7 +81,45 @@ main.wrap{padding-block:24px 60px}
     </section>
   </div>
 </main>
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <img src="/assets/logo.png" alt="Feldschlösschen" width="56">
+    <h2>Team-Code · Code d'équipe</h2>
+    <p>Bitte den Team-Code eingeben – ihr findet ihn im Marketing-Kanal in Teams.<br>Saisissez le code d'équipe – vous le trouvez dans le canal Teams du marketing.</p>
+    <input id="gateInput" autocomplete="off" aria-label="Team-Code">
+    <p class="gateerr" id="gateErr" hidden>Dieser Code stimmt nicht. · Ce code n'est pas correct.</p>
+    <button class="gatebtn" type="submit">OK</button>
+  </form>
+</div>
 <script>
+// Team code: asked once per device if the site requires it, then sent with every request.
+const CODE_KEY="whb-code";
+function teamCode(){ try{ return localStorage.getItem(CODE_KEY)||""; }catch(e){ return ""; } }
+let gateWaiters=[];
+async function tfetch(url,opts={}){
+  const h=Object.assign({},opts.headers||{}); const c=teamCode(); if(c) h["x-team-code"]=c;
+  const res=await fetch(url,Object.assign({},opts,{headers:h}));
+  if(res.status===403){
+    let j={}; try{ j=await res.clone().json(); }catch(e){}
+    if(j.error==="team_code"){ await askCode(!!c); return tfetch(url,opts); }
+  }
+  return res;
+}
+function askCode(wrong){
+  return new Promise(resolve=>{
+    gateWaiters.push(resolve);
+    const g=document.getElementById("gate"); if(!g.hidden) return;
+    g.hidden=false; document.getElementById("gateErr").hidden=!wrong;
+    const i=document.getElementById("gateInput"); i.value=""; setTimeout(()=>i.focus(),50);
+  });
+}
+document.getElementById("gateForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const v=document.getElementById("gateInput").value.trim(); if(!v) return;
+  try{ localStorage.setItem(CODE_KEY,v); }catch(e){}
+  document.getElementById("gate").hidden=true;
+  const w=gateWaiters; gateWaiters=[]; w.forEach(f=>f());
+});
 const $=id=>document.getElementById(id);
 let LIST=[], current=null;
 const fmt=iso=>{ const d=new Date(iso); return d.toLocaleDateString("de-CH",{weekday:"short",day:"numeric",month:"numeric",year:"numeric"}); };
@@ -92,7 +138,7 @@ function renderList(){
 async function open(week){
   current=week; renderList();
   try{
-    const r=await fetch("/api/archive?week="+encodeURIComponent(week),{cache:"no-store"});
+    const r=await tfetch("/api/archive?week="+encodeURIComponent(week),{cache:"no-store"});
     if(!r.ok) throw new Error(r.status);
     const a=await r.json();
     const h=$("head"); h.innerHTML=""; const b=document.createElement("b"); b.textContent=a.subject||kw(week);
@@ -104,7 +150,7 @@ async function open(week){
   }catch(e){ $("mail").innerHTML='<div class="placeholder">Diese Ausgabe konnte nicht geladen werden. · Impossible de charger cette édition.</div>'; }
 }
 (async()=>{
-  try{ const r=await fetch("/api/archive",{cache:"no-store"}); if(r.ok) LIST=(await r.json()).list||[]; }catch(e){}
+  try{ const r=await tfetch("/api/archive",{cache:"no-store"}); if(r.ok) LIST=(await r.json()).list||[]; }catch(e){}
   renderList();
   const want=(location.hash||"").slice(1);
   const first=LIST.find(a=>a.week===want)||LIST[0];

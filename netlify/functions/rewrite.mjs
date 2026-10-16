@@ -17,6 +17,7 @@ Deine Aufgabe: Jeden Eintrag so überarbeiten, dass die ganze Mail wie aus einem
 - Titel: kurz und prägnant (max. ca. 10 Wörter), ohne Punkt am Ende. Bestehende Ortsangaben im Titel behalten.
 - Text: 1–4 kurze Sätze, aktiv formuliert. Ein Dank an Beteiligte darf bleiben.
 - Ausblick-Punkte: knappe Stichworte, eine Zeile, ohne Punkt am Ende.
+- Team-Einträge (neue Gesichter, Ferien, Abwesenheiten, Stellvertretungen, Jubiläen): sachlich-freundlich, Daten und Namen der Stellvertretung unbedingt behalten.
 - Kein Eintrag darf wegfallen, keiner hinzukommen. Gleiche id zurückgeben.
 
 Antworte ausschliesslich mit gültigem JSON ohne weiteren Text, in dieser Form:

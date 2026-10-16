@@ -130,6 +130,14 @@ textarea{resize:vertical;min-height:110px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:9;max-width:calc(100% - 32px)}
 .toast.err{background:var(--red);color:#fff}
 .livebar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+
+.gate{position:fixed;inset:0;z-index:50;background:rgba(0,8,60,.72);display:grid;place-items:center;padding:16px}
+.gatebox{background:#fff;color:#111633;border-radius:16px;padding:26px;max-width:420px;width:100%;display:grid;gap:12px;justify-items:center;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gatebox h2{margin:0;font:700 24px "Barlow Condensed","Arial Narrow",Arial,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:#000B72}
+.gatebox p{margin:0;font-size:14px;color:#5B6180}
+.gatebox input{font:18px "Barlow","Segoe UI",Arial,sans-serif;text-align:center;border:1px solid #DDE0EE;border-radius:10px;padding:11px 12px;width:100%}
+.gatebox .gateerr{color:#D02A12;font-weight:600}
+.gatebtn{background:#000B72;color:#fff;border:0;border-radius:10px;padding:11px 28px;font:600 17px "Barlow","Segoe UI",Arial,sans-serif;cursor:pointer}
 </style>
 </head>
 <body>
@@ -158,7 +166,45 @@ textarea{resize:vertical;min-height:110px}
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<div class="gate" id="gate" hidden>
+  <form class="gatebox" id="gateForm">
+    <img src="/assets/logo.png" alt="Feldschlösschen" width="56">
+    <h2>Team-Code · Code d'équipe</h2>
+    <p>Bitte den Team-Code eingeben – ihr findet ihn im Marketing-Kanal in Teams.<br>Saisissez le code d'équipe – vous le trouvez dans le canal Teams du marketing.</p>
+    <input id="gateInput" autocomplete="off" aria-label="Team-Code">
+    <p class="gateerr" id="gateErr" hidden>Dieser Code stimmt nicht. · Ce code n'est pas correct.</p>
+    <button class="gatebtn" type="submit">OK</button>
+  </form>
+</div>
 <script>
+// Team code: asked once per device if the site requires it, then sent with every request.
+const CODE_KEY="whb-code";
+function teamCode(){ try{ return localStorage.getItem(CODE_KEY)||""; }catch(e){ return ""; } }
+let gateWaiters=[];
+async function tfetch(url,opts={}){
+  const h=Object.assign({},opts.headers||{}); const c=teamCode(); if(c) h["x-team-code"]=c;
+  const res=await fetch(url,Object.assign({},opts,{headers:h}));
+  if(res.status===403){
+    let j={}; try{ j=await res.clone().json(); }catch(e){}
+    if(j.error==="team_code"){ await askCode(!!c); return tfetch(url,opts); }
+  }
+  return res;
+}
+function askCode(wrong){
+  return new Promise(resolve=>{
+    gateWaiters.push(resolve);
+    const g=document.getElementById("gate"); if(!g.hidden) return;
+    g.hidden=false; document.getElementById("gateErr").hidden=!wrong;
+    const i=document.getElementById("gateInput"); i.value=""; setTimeout(()=>i.focus(),50);
+  });
+}
+document.getElementById("gateForm").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  const v=document.getElementById("gateInput").value.trim(); if(!v) return;
+  try{ localStorage.setItem(CODE_KEY,v); }catch(e){}
+  document.getElementById("gate").hidden=true;
+  const w=gateWaiters; gateWaiters=[]; w.forEach(f=>f());
+});
 const RECIPIENT_NAME = "Astrid";
 const MAX_FILE = 4.4*1024*1024;   // per file (server limit)
 const MAX_FILES = 10;             // per entry
@@ -174,8 +220,8 @@ const PARTS = [
    de:{name:"Ausblick nächste Woche", hint:"Eine Zeile pro Punkt.", title:"Punkt", titlePh:"OLMA-Vorbereitungen", add:"Neuer Punkt", none:"Noch keine Punkte."},
    fr:{name:"La semaine prochaine", hint:"Une ligne par point.", title:"Point", titlePh:"Préparatifs OLMA", add:"Nouveau point", none:"Aucun point pour l'instant."}},
   {id:"team", fields:["title","detail"],
-   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", opt:"optional", add:"Neue Team-News", none:"Noch keine Team-News."},
-   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", opt:"facultatif", add:"Nouvelle nouvelle", none:"Aucune nouvelle pour l'instant."}}
+   de:{name:"Team", hint:"Neue Gesichter, Ferien und Abwesenheiten, Stellvertretungen, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Ferien: Vorname Name, 20.10.–31.10.", detail:"Details dazu", detailPh:"Stellvertretung: Vorname Name. Dringende Anfragen bitte direkt an sie/ihn.", opt:"optional", add:"Neue Team-News", none:"Noch keine Team-News."},
+   fr:{name:"L'équipe", hint:"Arrivées, vacances et absences, remplacements, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Vacances : Prénom Nom, 20.10–31.10", detail:"Précisions", detailPh:"Remplacement : Prénom Nom. Merci d'adresser les demandes urgentes à cette personne.", opt:"facultatif", add:"Nouvelle nouvelle", none:"Aucune nouvelle pour l'instant."}}
 ];
 const T = {
   de:{script:"Proscht!", hero:"Was lief diese Woche?", heroSub:"Hier seht ihr alles, was das Team schon eingetragen hat. Ergänzt bestehende Einträge oder fügt neue hinzu – "+RECIPIENT_NAME+" macht daraus die Weekly Highlights.",
@@ -223,7 +269,7 @@ const mediaUrl=k=>"/api/media/"+k;
 async function load(){
   if(editing) return;
   try{
-    const r=await fetch("/api/items?week="+encodeURIComponent(W.key),{cache:"no-store"});
+    const r=await tfetch("/api/items?week="+encodeURIComponent(W.key),{cache:"no-store"});
     if(!r.ok) throw 0;
     items=(await r.json()).items||[]; loadedAt=new Date(); loadError=false;
   }catch(e){ loadError=true; }
@@ -268,7 +314,7 @@ async function addFiles(list){
   render();
 }
 async function upload(m){
-  const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":m.blob.type||"application/octet-stream","x-filename":encodeURIComponent(m.name)},body:m.blob});
+  const res=await tfetch("/api/upload",{method:"POST",headers:{"content-type":m.blob.type||"application/octet-stream","x-filename":encodeURIComponent(m.name)},body:m.blob});
   if(!res.ok) throw new Error("upload");
   return (await res.json()).key;
 }
@@ -282,8 +328,8 @@ async function saveEdit(){
     for(let i=0;i<news.length;i++){ e.msg=tr("uploading")+" "+(i+1)+"/"+news.length+" …"; render(); news[i].key=await upload(news[i]); }
     const payload={title:clean(d.title),detail:clean(d.detail),link:clean(d.link),media:e.media.map(m=>({key:m.key,kind:m.kind,name:m.name}))};
     let res;
-    if(e.id) res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"PUT",headers:{"content-type":"application/json","if-match":e.etag||""},body:JSON.stringify(payload)});
-    else res=await fetch("/api/items",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...payload,week:W.key,section:e.section})});
+    if(e.id) res=await tfetch("/api/items?id="+encodeURIComponent(e.id),{method:"PUT",headers:{"content-type":"application/json","if-match":e.etag||""},body:JSON.stringify(payload)});
+    else res=await tfetch("/api/items",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...payload,week:W.key,section:e.section})});
     if(res.status===409){
       const j=await res.json(); const fresh=j.item;
       if(fresh){ items=items.map(x=>x.id===fresh.id?fresh:x); e.etag=fresh.etag; e.draft={title:fresh.title||"",detail:fresh.detail||"",link:fresh.link||""};
@@ -374,7 +420,7 @@ function editor(p,L){
       if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent=tr("delConfirm"); setTimeout(()=>{ if(del.isConnected){ delete del.dataset.arm; del.textContent=tr("del"); } },4000); return; }
       e.busy=true; render();
       try{
-        const res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE"});
+        const res=await tfetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE"});
         if(!res.ok && res.status!==404) throw new Error(res.status);
         e.media.forEach(m=>m.blob&&m.url&&URL.revokeObjectURL(m.url));
         editing=null; toast(tr("deleted")); await load();

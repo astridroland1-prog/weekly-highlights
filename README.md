@@ -20,3 +20,14 @@ Outil en deux parties pour préparer le mail hebdomadaire « Weekly Highlights �
 - Mot de passe de la compilation : variable d'environnement `ADMIN_PASSWORD` dans Netlify (Project configuration → Environment variables). Après un changement, redéployer.
 
 Chaque modification poussée sur `main` est mise en ligne automatiquement par Netlify.
+
+## Réglages optionnels (variables d'environnement Netlify)
+| Variable | Effet |
+|---|---|
+| `ADMIN_PASSWORD` | mot de passe de la page de compilation (obligatoire) |
+| `TEAM_CODE` | code d'équipe demandé une fois par appareil sur le formulaire et les archives (sans lui : accès par simple lien) |
+| `RESEND_API_KEY` | envoi direct du mail compilé, photos intégrées (`MAIL_TO`, `MAIL_FROM` en option) |
+| `ANTHROPIC_API_KEY` | bouton « Harmoniser le style » (`ANTHROPIC_MODEL` en option) |
+| `TEAMS_WEBHOOK_URL` | rappel automatique chaque jeudi 11:45 UTC dans un canal Teams (workflow « webhook ») |
+
+Après chaque changement de variable : Netlify → Deploys → Trigger deploy. État des réglages (sans valeurs) : `/api/health`.

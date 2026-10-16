@@ -37,9 +37,35 @@ function same(a, b) {
 const isAdmin = (req) => { const p = Netlify.env.get("ADMIN_PASSWORD"); return !!p && same(req.headers.get("x-admin-password") || "", p); };
 const ID = /^\d{4}-W\d{2}\/[\w-]+$/;
 
+
+// Optional team code (TEAM_CODE): without it the board is open to anyone with the link.
+function teamOk(req) {
+  const code = (Netlify.env.get("TEAM_CODE") || "").trim().toLowerCase();
+  if (!code) return true;
+  const given = (req.headers.get("x-team-code") || "").trim().toLowerCase();
+  const admin = Netlify.env.get("ADMIN_PASSWORD");
+  return given === code || (!!admin && req.headers.get("x-admin-password") === admin);
+}
+const teamDenied = () => Response.json({ error: "team_code" }, { status: 403 });
+
 export default async (req) => {
+  if (!teamOk(req)) return teamDenied();
   const url = new URL(req.url);
   const s = store();
+
+  if (req.method === "GET" && url.searchParams.get("year")) {
+    // Astrid only: every entry of one year, for the Excel export.
+    if (!isAdmin(req)) return Response.json({ error: "password" }, { status: 401 });
+    const year = url.searchParams.get("year");
+    if (!/^\d{4}$/.test(year)) return Response.json({ error: "year" }, { status: 400 });
+    const { blobs } = await s.list({ prefix: year + "-W" });
+    const items = [];
+    for (const b of blobs.sort((x, y) => x.key.localeCompare(y.key))) {
+      const d = await s.get(b.key, { type: "json" });
+      if (d) items.push(d);
+    }
+    return Response.json({ year, items }, { headers: { "cache-control": "no-store" } });
+  }
 
   if (req.method === "GET") {
     const week = url.searchParams.get("week") || "";

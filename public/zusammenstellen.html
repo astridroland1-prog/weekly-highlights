@@ -72,6 +72,9 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
 .entries{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:46vh;overflow:auto}
 .entries li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:4px;background:var(--field)}
 .entries .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.entries .mv{display:flex;gap:2px;margin-left:auto}
+.entries .mv button{padding:2px 7px;font-size:12px}
+.entries .mv button:disabled{opacity:.3}
 .entries .what{font-size:14px;overflow-wrap:anywhere}
 .empty{color:var(--muted);font-size:14px;text-align:center;padding:12px}
 
@@ -138,6 +141,23 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <ul class="entries" id="binList"></ul>
       </section>
       <section class="card">
+        <h2>Outils</h2>
+        <div style="display:grid;gap:6px">
+          <b style="font-size:15px">Export Excel</b>
+          <div class="bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="expYear" aria-label="Année" style="font:15px var(--body);padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink)"></select>
+            <button id="expBtn" type="button">⬇ Télécharger</button>
+          </div>
+          <p class="muted">Toutes les entrées de l'année (y compris supprimées, marquées), une ligne par entrée.</p>
+        </div>
+        <div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px">
+          <b style="font-size:15px">Rappel Teams du jeudi</b>
+          <p class="muted" id="remindMode">…</p>
+          <button id="remindBtn" type="button">Envoyer un rappel test</button>
+        </div>
+        <p class="status" id="toolStatus" role="status" aria-live="polite"></p>
+      </section>
+      <section class="card">
         <h2>Archives</h2>
         <p class="muted">Chaque compilation envoyée est gardée ici.</p>
         <ul class="arch" id="archList"></ul>
@@ -202,13 +222,13 @@ async function load(){
     // Password check: only a wrong password blocks the page; any other problem is shown but does not hide the entries.
     let adminWarn="";
     try{ await api("GET",""); }catch(err){ if(err.message==="password") throw err; adminWarn=" (Suppression indisponible : "+err.message+")"; }
-    const r=await fetch("/api/items?week="+encodeURIComponent(W.key)+"&t="+Date.now(),{cache:"no-store"});
+    const r=await fetch("/api/items?week="+encodeURIComponent(W.key)+"&t="+Date.now(),{headers:{"x-admin-password":PW},cache:"no-store"});
     if(!r.ok) throw new Error("items "+r.status);
     entries=(await r.json()).items||[];
     if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
     if(POLISH_WEEK!==W.key){ POLISH={}; POLISH_WEEK=W.key; }
-    renderEntries(); buildMail(); probeSend(); loadArchive(); probeAI(); loadBin(W.key);
+    renderEntries(); buildMail(); probeSend(); loadArchive(); probeAI(); loadBin(W.key); probeRemind();
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
@@ -238,13 +258,26 @@ async function loadBin(week){
     li.append(meta,w); ul.append(li);
   });
 }
+// ---------- Order of entries in the mail (kept per week in this browser) ----------
+const orderKey=()=>"wh-order-"+(CUR?CUR.key:"");
+function getOrder(){ try{ return JSON.parse(localStorage.getItem(orderKey())||"[]"); }catch(e){ return []; } }
+function setOrder(ids){ try{ localStorage.setItem(orderKey(),JSON.stringify(ids)); }catch(e){} }
+function ordered(list){ const o=getOrder(); const pos=id=>{ const i=o.indexOf(id); return i<0?1e6:i; }; return list.map((e,i)=>[e,i]).sort((a,b)=>(pos(a[0].id)-pos(b[0].id))||(a[1]-b[1])).map(x=>x[0]); }
+function move(sec,id,dir){
+  const list=ordered(entries.filter(e=>e.section===sec)).map(e=>e.id);
+  const i=list.indexOf(id), j=i+dir; if(i<0||j<0||j>=list.length) return;
+  [list[i],list[j]]=[list[j],list[i]];
+  const others=getOrder().filter(x=>!list.includes(x));
+  setOrder([...others,...list]); renderEntries(); buildMail();
+  setStatus("copyStatus","Ordre mis à jour dans le mail.","ok");
+}
 function renderEntries(){
   const hl=entries.filter(e=>e.section==="highlight");
   $("nEntries").textContent=entries.length; $("nHl").textContent=hl.length;
   $("nPh").textContent=hl.reduce((n,h)=>n+(h.media||[]).filter(m=>m.kind==="img").length,0);
   const ul=$("entries"); ul.innerHTML="";
   if(!entries.length){ const li=document.createElement("li"); li.className="empty"; li.textContent="Les entrées de l'équipe apparaîtront ici."; ul.append(li); return; }
-  ["highlight","team","outlook"].forEach(sec=>entries.filter(e=>e.section===sec).forEach(e=>{
+  ["highlight","team","outlook"].forEach(sec=>{ const list=ordered(entries.filter(e=>e.section===sec)); list.forEach((e,idx)=>{
     const li=document.createElement("li");
     const meta=document.createElement("div"); meta.className="meta";
     const d=new Date(e.updatedAt||e.createdAt), t=document.createElement("span");
@@ -253,12 +286,15 @@ function renderEntries(){
     del.onclick=async ()=>{
       if(!del.dataset.arm){ del.dataset.arm="1"; del.textContent="Confirmer ?"; setTimeout(()=>{delete del.dataset.arm; del.textContent="Supprimer";},4000); return; }
       del.disabled=true;
-      try{ const res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE"}); if(!res.ok&&res.status!==404) throw 0; await load(); }catch(err){ del.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); }
+      try{ const res=await fetch("/api/items?id="+encodeURIComponent(e.id),{method:"DELETE",headers:{"x-admin-password":PW}}); if(!res.ok&&res.status!==404) throw 0; await load(); }catch(err){ del.disabled=false; setStatus("status","Suppression impossible. Réessayez.","err"); }
     };
-    meta.append(t,del);
+    const mv=document.createElement("span"); mv.className="mv";
+    [["▲",-1,"Monter"],["▼",1,"Descendre"]].forEach(([g,dir,lab])=>{ const b=document.createElement("button"); b.type="button"; b.className="ghost"; b.textContent=g; b.title=lab+" dans le mail"; b.setAttribute("aria-label",lab);
+      b.disabled=(dir<0&&idx===0)||(dir>0&&idx===list.length-1); b.onclick=()=>move(sec,e.id,dir); mv.append(b); });
+    meta.append(t,mv,del);
     const w=document.createElement("div"); w.className="what"; w.textContent=e.title||(e.detail||"").slice(0,80);
     li.append(meta,w); ul.append(li);
-  }));
+  }); });
 }
 
 // ---------- The e-mail, in the format of Astrid's weekly mail ----------
@@ -272,8 +308,8 @@ const imgTag=(src,w,alt)=>'<img src="'+src+'" width="'+w+'" alt="'+esc(alt)+'" s
 
 function buildMail(){
   const pol=e=>{ const p=POLISH[e.id]; return p && p.at===(e.updatedAt||e.createdAt) ? {...e,title:p.title,detail:p.detail} : e; };
-  const H=entries.filter(e=>e.section==="highlight").map(pol), Tm=entries.filter(e=>e.section==="team").map(pol);
-  const O=entries.filter(e=>e.section==="outlook").map(pol).map(e=>e.title);
+  const H=ordered(entries.filter(e=>e.section==="highlight")).map(pol), Tm=ordered(entries.filter(e=>e.section==="team")).map(pol);
+  const O=ordered(entries.filter(e=>e.section==="outlook")).map(pol).map(e=>e.title);
   const seen=new Set(); const outlook=O.filter(t=>{ const k=(t||"").toLowerCase().trim(); if(!k||seen.has(k)) return false; seen.add(k); return true; });
   if(!entries.length){ $("mail").innerHTML='<div class="placeholder">Le mail se construira ici à partir des contributions de la semaine.</div>'; setStatus("copyStatus",""); return; }
   let html='<div style="'+F+'">';
@@ -457,6 +493,39 @@ $("polishBtn").onclick=async ()=>{
   finally{ btn.disabled=false; updatePolishUi(); }
 };
 $("origBtn").onclick=()=>{ POLISH={}; buildMail(); updatePolishUi(); setStatus("copyStatus","Textes d'origine de l'équipe rétablis.","ok"); };
+
+// ---------- Tools: Excel export and Teams reminder ----------
+(function(){ const y=new Date().getFullYear(), sel=$("expYear"); for(let i=y+1;i>=2026;i--){ const o=document.createElement("option"); o.value=o.textContent=i; if(i===y) o.selected=true; sel.append(o); } })();
+const csvCell=v=>{ const t=String(v==null?"":v).replace(/\r/g,""); return /[";\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t; };
+$("expBtn").onclick=async ()=>{
+  const year=$("expYear").value, btn=$("expBtn"); btn.disabled=true; setStatus("toolStatus","Préparation de l'export …");
+  try{
+    const r=await fetch("/api/items?year="+year+"&t="+Date.now(),{headers:{"x-admin-password":PW},cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const list=(await r.json()).items||[];
+    const head=["Semaine","KW","Rubrique","Titre","Texte","Lien","Photos/vidéos","Liens des fichiers","Créé le","Modifié le","Supprimé"];
+    const rows=list.map(e=>[e.week,parseInt(e.week.split("-W")[1],10),SEC[e.section]||e.section,e.title||"",e.detail||"",e.link||"",(e.media||[]).length,(e.media||[]).map(m=>location.origin+"/api/media/"+m.key).join(" "),
+      new Date(e.createdAt).toLocaleString("de-CH"),new Date(e.updatedAt||e.createdAt).toLocaleString("de-CH"),e.deleted?"oui":""]);
+    const csv="\ufeff"+[head,...rows].map(r=>r.map(csvCell).join(";")).join("\r\n");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); a.download="weekly-highlights-"+year+".csv";
+    document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    setStatus("toolStatus",list.length+" entrées exportées ("+year+"). Le fichier s'ouvre directement dans Excel.","ok");
+  }catch(e){ setStatus("toolStatus","Export impossible ("+e.message+").","err"); }
+  finally{ btn.disabled=false; }
+};
+let REMIND={configured:false};
+async function probeRemind(){
+  try{ const r=await fetch("/api/remind",{headers:{"x-admin-password":PW},cache:"no-store"}); if(r.ok) REMIND=await r.json(); }catch(e){}
+  $("remindMode").textContent=REMIND.configured?"Activé : chaque jeudi vers 13h45 (12h45 en hiver), un message est posté dans votre canal Teams.":"Pas encore activé : il manque l'adresse TEAMS_WEBHOOK_URL dans Netlify.";
+  $("remindBtn").disabled=!REMIND.configured;
+}
+$("remindBtn").onclick=async ()=>{
+  const btn=$("remindBtn"); btn.disabled=true; setStatus("toolStatus","Envoi du rappel test …");
+  try{ const r=await fetch("/api/remind",{method:"POST",headers:{"x-admin-password":PW}}); const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error==="teams"?"Teams "+j.status:(j.error||r.status)); setStatus("toolStatus","Rappel test posté dans Teams.","ok"); }
+  catch(e){ setStatus("toolStatus","Rappel impossible ("+e.message+").","err"); }
+  finally{ btn.disabled=!REMIND.configured; }
+};
 
 $("rebuild").onclick=()=>{ buildMail(); setStatus("copyStatus","Mail régénéré à partir des contributions.","ok"); };
 $("reload").onclick=load;

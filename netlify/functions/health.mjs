@@ -6,6 +6,8 @@ export default async () =>
       admin: !!Netlify.env.get("ADMIN_PASSWORD"),
       ai: !!Netlify.env.get("ANTHROPIC_API_KEY"),
       mail: !!Netlify.env.get("RESEND_API_KEY"),
+      teamCode: !!Netlify.env.get("TEAM_CODE"),
+      teams: !!Netlify.env.get("TEAMS_WEBHOOK_URL"),
       checkedAt: new Date().toISOString(),
     },
     { headers: { "cache-control": "no-store" } }

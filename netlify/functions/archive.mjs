@@ -10,8 +10,20 @@ function same(a, b) {
 }
 const WEEK = /^\d{4}-W\d{2}$/;
 
+
+// Optional team code (TEAM_CODE): without it the board is open to anyone with the link.
+function teamOk(req) {
+  const code = (Netlify.env.get("TEAM_CODE") || "").trim().toLowerCase();
+  if (!code) return true;
+  const given = (req.headers.get("x-team-code") || "").trim().toLowerCase();
+  const admin = Netlify.env.get("ADMIN_PASSWORD");
+  return given === code || (!!admin && req.headers.get("x-admin-password") === admin);
+}
+const teamDenied = () => Response.json({ error: "team_code" }, { status: 403 });
+
 export default async (req) => {
-  // Reading the archive is open to the team; saving needs Astrid's password.
+  // Reading the archive is open to the team (team code if set); saving needs Astrid's password.
+  if (req.method === "GET" && !teamOk(req)) return teamDenied();
   if (req.method !== "GET") {
     const expected = Netlify.env.get("ADMIN_PASSWORD");
     if (!expected || !same(req.headers.get("x-admin-password") || "", expected)) return Response.json({ error: "password" }, { status: 401 });
