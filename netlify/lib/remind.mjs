@@ -33,7 +33,7 @@ export async function sendReminder({ test = false } = {}) {
     type: "AdaptiveCard", version: "1.4", $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
     body: [
       { type: "TextBlock", size: "Large", weight: "Bolder", text: (test ? "[Test] " : "") + `Weekly Highlights KW ${week} – eure Beiträge`, wrap: true },
-      { type: "TextBlock", wrap: true, text: "Bitte tragt bis morgen früh eure Highlights, den Ausblick auf nächste Woche und Team-News (Ferien, Abwesenheiten, neue Gesichter) ein. Ergänzt bestehende Einträge, statt doppelte zu erstellen. Merci & Proscht!" },
+      { type: "TextBlock", wrap: true, text: "Bitte tragt bis Freitag, 12:00 Uhr, eure Highlights, den Ausblick auf nächste Woche und Team-News (Ferien, Abwesenheiten, Stellvertretungen, neue Gesichter) ein. Ergänzt bestehende Einträge, statt doppelte zu erstellen. Merci & Proscht!" },
       { type: "TextBlock", wrap: true, isSubtle: true, text: status },
     ],
     actions: [
