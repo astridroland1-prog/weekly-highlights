@@ -132,6 +132,7 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <button id="copyHtml" type="button">Copier pour Outlook</button>
         <button id="copyText" type="button">Texte seul</button>
         <button class="ghost" id="rebuild" type="button">Régénérer depuis les contributions</button>
+        <p class="muted" id="sendMode" style="flex-basis:100%"></p>
         <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
       </div>
       <div class="subject"><span>Objet :</span><b id="subject"></b><button class="ghost" id="copySubject" type="button">Copier</button></div>
@@ -252,11 +253,29 @@ function buildMail(){
 }
 
 function selectMail(){ const r=document.createRange(); r.selectNodeContents($("mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+// Plain-text version of the mail (bullets kept), used for the opened message and "Texte seul".
+function mailText(){
+  const out=[];
+  (function walk(n){
+    n.childNodes.forEach(c=>{
+      if(c.nodeType!==1) return;
+      const t=c.tagName;
+      if(t==="P"){ const k=c.cloneNode(true); k.querySelectorAll("br").forEach(br=>br.replaceWith("\n")); out.push(k.textContent.replace(/\u00a0/g," ").trim()); }
+      else if(t==="UL"||t==="OL"){ c.querySelectorAll(":scope > li").forEach(li=>out.push("• "+li.textContent.trim())); out.push(""); }
+      else if(t==="IMG"){ }
+      else walk(c);
+    });
+  })($("mail"));
+  return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}
 // ---------- Send ----------
 let SEND={configured:false,to:"astrid.roland@fgg.ch"};
 async function probeSend(){
   try{ const r=await fetch("/api/send",{headers:{"x-admin-password":PW}}); if(r.ok) SEND=await r.json(); }catch(e){}
   $("sendMail").textContent="Envoyer à "+SEND.to;
+  $("sendMode").textContent=SEND.configured
+    ? "Envoi direct activé : le mail complet, photos comprises, part en un clic."
+    : "Envoi direct pas encore activé (clé Resend manquante) : le bouton ouvre un mail avec tout le texte ; pour les photos, collez avec Ctrl+V.";
 }
 function mailHtml(){
   return '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:16px;">'+$("mail").innerHTML+'</body></html>';
@@ -264,14 +283,21 @@ function mailHtml(){
 let sendArm=0;
 $("sendMail").onclick=async ()=>{
   if(!entries.length){ setStatus("copyStatus","Il n'y a encore rien à envoyer pour cette semaine.","err"); return; }
-  const subject=$("subject").textContent, text=$("mail").innerText;
+  const subject=$("subject").textContent, text=mailText();
   if(!SEND.configured){
     // No mail service yet: copy the formatted mail, then open a new message with recipient and subject filled in.
     let ok=false;
     try{ await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([$("mail").innerHTML],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]); ok=true; }
     catch(e){ selectMail(); try{ ok=document.execCommand("copy"); }catch(_){} }
-    location.href="mailto:"+SEND.to+"?subject="+encodeURIComponent(subject);
-    setStatus("copyStatus", ok?"Le mail est copié et un nouveau message à "+SEND.to+" s'ouvre : collez avec Ctrl+V, puis envoyez.":"Un nouveau message s'ouvre. Le mail est sélectionné ici : copiez-le avec Ctrl+C, collez-le dans le message, puis envoyez.", ok?"ok":"err");
+    // The whole text goes into the new message; mail programs accept about 2000 characters in such a link.
+    const base="mailto:"+SEND.to+"?subject="+encodeURIComponent(subject)+"&body=";
+    let body=text.replace(/\n{3,}/g,"\n\n"), cut=false;
+    while((base+encodeURIComponent(body)).length>1900){ body=body.slice(0,Math.floor(body.length*0.9)); cut=true; }
+    if(cut) body=body.replace(/\s+\S*$/,"")+"\n\n[… Rest: mit Ctrl+V einfügen]";
+    location.href=base+encodeURIComponent(body);
+    setStatus("copyStatus", cut
+      ? "Un message à "+SEND.to+" s'ouvre avec le début du texte. La compilation complète avec les photos est copiée : effacez le texte du message, collez avec Ctrl+V, puis envoyez."
+      : "Un message à "+SEND.to+" s'ouvre avec tout le texte. Pour avoir aussi les photos et la mise en forme, effacez ce texte et collez avec Ctrl+V (déjà copié), puis envoyez.", ok?"ok":"err");
     return;
   }
   if(Date.now()-sendArm>5000){ sendArm=Date.now(); $("sendMail").textContent="Confirmer l'envoi à "+SEND.to+" ?"; setTimeout(()=>{ if(Date.now()-sendArm>=5000) $("sendMail").textContent="Envoyer à "+SEND.to; },5100); return; }
@@ -286,7 +312,7 @@ $("sendMail").onclick=async ()=>{
 };
 
 $("copyHtml").onclick=async ()=>{
-  const html=$("mail").innerHTML, text=$("mail").innerText;
+  const html=$("mail").innerHTML, text=mailText();
   try{
     if(!window.ClipboardItem) throw new Error("no");
     await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]);
@@ -297,7 +323,7 @@ $("copyHtml").onclick=async ()=>{
   }
 };
 $("copyText").onclick=async ()=>{
-  try{ await navigator.clipboard.writeText($("mail").innerText); setStatus("copyStatus","Texte copié, sans mise en forme ni photos.","ok"); }
+  try{ await navigator.clipboard.writeText(mailText()); setStatus("copyStatus","Texte copié, sans mise en forme ni photos.","ok"); }
   catch(e){ selectMail(); setStatus("copyStatus","Le texte est sélectionné : copiez-le avec Ctrl+C.","err"); }
 };
 $("copySubject").onclick=async ()=>{ try{ await navigator.clipboard.writeText($("subject").textContent); setStatus("copyStatus","Objet copié.","ok"); }catch(e){ setStatus("copyStatus","Copie impossible : sélectionnez l'objet à la main.","err"); } };
