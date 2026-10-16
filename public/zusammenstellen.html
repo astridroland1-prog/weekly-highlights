@@ -128,7 +128,8 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
 
     <section class="editor">
       <div class="toolbar">
-        <button class="primary" id="copyHtml" type="button">Copier pour Outlook</button>
+        <button class="primary" id="sendMail" type="button">Envoyer par e-mail</button>
+        <button id="copyHtml" type="button">Copier pour Outlook</button>
         <button id="copyText" type="button">Texte seul</button>
         <button class="ghost" id="rebuild" type="button">Régénérer depuis les contributions</button>
         <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
@@ -178,7 +179,7 @@ async function load(){
     entries=(await r.json()).items||[];
     if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
-    renderEntries(); buildMail();
+    renderEntries(); buildMail(); probeSend();
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
@@ -251,6 +252,39 @@ function buildMail(){
 }
 
 function selectMail(){ const r=document.createRange(); r.selectNodeContents($("mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+// ---------- Send ----------
+let SEND={configured:false,to:"astrid.roland@fgg.ch"};
+async function probeSend(){
+  try{ const r=await fetch("/api/send",{headers:{"x-admin-password":PW}}); if(r.ok) SEND=await r.json(); }catch(e){}
+  $("sendMail").textContent="Envoyer à "+SEND.to;
+}
+function mailHtml(){
+  return '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:16px;">'+$("mail").innerHTML+'</body></html>';
+}
+let sendArm=0;
+$("sendMail").onclick=async ()=>{
+  if(!entries.length){ setStatus("copyStatus","Il n'y a encore rien à envoyer pour cette semaine.","err"); return; }
+  const subject=$("subject").textContent, text=$("mail").innerText;
+  if(!SEND.configured){
+    // No mail service yet: copy the formatted mail, then open a new message with recipient and subject filled in.
+    let ok=false;
+    try{ await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([$("mail").innerHTML],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]); ok=true; }
+    catch(e){ selectMail(); try{ ok=document.execCommand("copy"); }catch(_){} }
+    location.href="mailto:"+SEND.to+"?subject="+encodeURIComponent(subject);
+    setStatus("copyStatus", ok?"Le mail est copié et un nouveau message à "+SEND.to+" s'ouvre : collez avec Ctrl+V, puis envoyez.":"Un nouveau message s'ouvre. Le mail est sélectionné ici : copiez-le avec Ctrl+C, collez-le dans le message, puis envoyez.", ok?"ok":"err");
+    return;
+  }
+  if(Date.now()-sendArm>5000){ sendArm=Date.now(); $("sendMail").textContent="Confirmer l'envoi à "+SEND.to+" ?"; setTimeout(()=>{ if(Date.now()-sendArm>=5000) $("sendMail").textContent="Envoyer à "+SEND.to; },5100); return; }
+  sendArm=0; const btn=$("sendMail"); btn.disabled=true; btn.textContent="Envoi …";
+  try{
+    const r=await fetch("/api/send",{method:"POST",headers:{"content-type":"application/json","x-admin-password":PW},body:JSON.stringify({subject,html:mailHtml(),text})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error==="provider"?"service d'envoi ("+j.status+")":(j.error||r.status));
+    setStatus("copyStatus","Envoyé à "+SEND.to+" – « "+subject+" ».","ok");
+  }catch(e){ setStatus("copyStatus","L'envoi a échoué ("+e.message+"). Utilisez « Copier pour Outlook » en attendant.","err"); }
+  finally{ btn.disabled=false; btn.textContent="Envoyer à "+SEND.to; }
+};
+
 $("copyHtml").onclick=async ()=>{
   const html=$("mail").innerHTML, text=$("mail").innerText;
   try{
