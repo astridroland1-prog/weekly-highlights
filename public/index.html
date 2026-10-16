@@ -127,6 +127,8 @@ textarea{resize:vertical;min-height:110px}
 .link-btn{background:transparent;border:0;color:var(--brand);font-weight:600;font-size:14px;padding:4px 6px}
 @media (prefers-color-scheme:dark){.link-btn{color:#AFB7FF}}
 .link-btn:hover{text-decoration:underline}
+.link-btn.danger{color:var(--red)}
+.entry .acts{display:flex;gap:6px;align-items:center;margin-left:auto}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 18px;border-radius:999px;font-size:15px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:9;max-width:calc(100% - 32px)}
 .toast.err{background:var(--red);color:#fff}
 .livebar{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;color:var(--muted);flex-wrap:wrap}
@@ -231,7 +233,7 @@ const T = {
       updated:"Stand", entries:["Eintrag","Einträge"], changed:"geändert", added:"erstellt", justNow:"gerade eben", minAgo:"vor {n} Min.", hAgo:"vor {n} Std.",
       empty:"Bitte zuerst etwas eintragen.", fileTooBig:"Eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Eintrag.",
       saveFail:"Speichern hat nicht geklappt. Bitte nochmals versuchen.", conflict:"Jemand hat diesen Eintrag gerade geändert. Die neue Version wird angezeigt – bitte deine Ergänzung nochmals einfügen.",
-      del:"Eintrag löschen", delConfirm:"Wirklich löschen?", deleted:"Gelöscht ✓", delFail:"Löschen hat nicht geklappt. Bitte nochmals versuchen.", similar:"Ähnlicher Eintrag schon vorhanden:", useIt:"Diesen ergänzen", unsaved:"Ungespeicherte Änderungen gehen verloren. Trotzdem schliessen?", photos:"Fotos"},
+      del:"Eintrag löschen", delShort:"Löschen", delConfirm:"Wirklich löschen?", deleted:"Gelöscht ✓", delFail:"Löschen hat nicht geklappt. Bitte nochmals versuchen.", similar:"Ähnlicher Eintrag schon vorhanden:", useIt:"Diesen ergänzen", unsaved:"Ungespeicherte Änderungen gehen verloren. Trotzdem schliessen?", photos:"Fotos"},
   fr:{script:"Santé !", hero:"Qu'est-ce qui s'est passé cette semaine ?", heroSub:"Vous voyez ici tout ce que l'équipe a déjà saisi. Complétez les entrées existantes ou ajoutez-en de nouvelles – "+RECIPIENT_NAME+" en fera les Weekly Highlights.",
       edit:"Modifier / compléter", save:"Enregistrer", saving:"Enregistrement …", cancel:"Annuler", remove:"Retirer", saved:"Enregistré ✓", uploading:"Envoi des photos",
       media:"Photos et vidéos", drop:"Ajouter des photos ou des vidéos", dropSub:"cliquer ou glisser ici", tooBig:"trop lourd", photoNote:"Les photos sont réduites automatiquement. Vidéos jusqu'à 4,4 Mo (env. 15 s) – pour une vidéo plus longue, indiquez un lien.",
@@ -239,7 +241,7 @@ const T = {
       updated:"Mis à jour", entries:["entrée","entrées"], changed:"modifié", added:"créé", justNow:"à l'instant", minAgo:"il y a {n} min", hAgo:"il y a {n} h",
       empty:"Saisissez d'abord quelque chose.", fileTooBig:"Un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par entrée.",
       saveFail:"L'enregistrement n'a pas abouti. Réessayez.", conflict:"Quelqu'un vient de modifier cette entrée. La nouvelle version s'affiche – ajoutez à nouveau votre complément.",
-      del:"Supprimer l'entrée", delConfirm:"Vraiment supprimer ?", deleted:"Supprimé ✓", delFail:"La suppression n'a pas abouti. Réessayez.", similar:"Une entrée semblable existe déjà :", useIt:"Compléter celle-ci", unsaved:"", photos:"photos"}
+      del:"Supprimer l'entrée", delShort:"Supprimer", delConfirm:"Vraiment supprimer ?", deleted:"Supprimé ✓", delFail:"La suppression n'a pas abouti. Réessayez.", similar:"Une entrée semblable existe déjà :", useIt:"Compléter celle-ci", unsaved:"", photos:"photos"}
 };
 
 const $=id=>document.getElementById(id);
@@ -395,8 +397,16 @@ function view(p,L,it){
   }
   const foot=el("div","foot");
   if(!p.line) foot.append(el("span","",(it.updatedAt!==it.createdAt?tr("changed"):tr("added"))+" "+ago(it.updatedAt)));
+  const acts=el("span","acts");
   const b=el("button","link-btn","✎ "+tr("edit")); b.type="button"; b.onclick=()=>startEdit(p.id,it);
-  foot.append(b); card.append(foot);
+  const d=el("button","link-btn danger","🗑 "+tr("delShort")); d.type="button"; d.setAttribute("aria-label",tr("del"));
+  d.onclick=async ()=>{
+    if(!d.dataset.arm){ d.dataset.arm="1"; d.textContent=tr("delConfirm"); setTimeout(()=>{ if(d.isConnected){ delete d.dataset.arm; d.textContent="🗑 "+tr("delShort"); } },4000); return; }
+    d.disabled=true;
+    try{ const res=await tfetch("/api/items?id="+encodeURIComponent(it.id),{method:"DELETE"}); if(!res.ok&&res.status!==404) throw new Error(res.status); toast(tr("deleted")); await load(); }
+    catch(err){ d.disabled=false; delete d.dataset.arm; d.textContent="🗑 "+tr("delShort"); toast(tr("delFail"),"err"); }
+  };
+  acts.append(b,d); foot.append(acts); card.append(foot);
   return card;
 }
 function editor(p,L){
