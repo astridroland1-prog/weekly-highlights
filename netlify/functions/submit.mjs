@@ -21,7 +21,11 @@ export default async (req) => {
   };
   if (!items.highlight.length && !items.outlook.length && !items.team.length) return Response.json({ error: "empty" }, { status: 400 });
   const key = `${week}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-  await getStore({ name: "wh-entries", consistency: "strong" }).setJSON(key, { week, createdAt: new Date().toISOString(), lang: str(body.lang, 2), items });
+  // Optional edited preview. Stored as-is; the compilation page sanitizes it before display.
+  const html = body.html && typeof body.html === "object"
+    ? { main: typeof body.html.main === "string" ? body.html.main.slice(0, 200000) : "", outlook: typeof body.html.outlook === "string" ? body.html.outlook.slice(0, 30000) : "" }
+    : null;
+  await getStore({ name: "wh-entries", consistency: "strong" }).setJSON(key, { week, createdAt: new Date().toISOString(), lang: str(body.lang, 2), items, html });
   return Response.json({ ok: true });
 };
 

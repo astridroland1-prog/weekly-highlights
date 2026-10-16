@@ -101,6 +101,12 @@ input.invalid{border-color:var(--red)}
 .done h3{font:700 26px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--ok)}
 pre{font:14px/1.55 var(--mono);white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;max-height:320px;overflow:auto;color:var(--ink)}
 details summary{cursor:pointer;color:var(--muted);font-size:15px}
+.preview{display:grid;gap:8px}
+.plabel{font:700 14px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.note{margin:0;font-size:15px;color:var(--gold);font-weight:600}
+.mailwrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
+.mail{background:#fff;color:#000;padding:20px;min-height:60px;outline:none}
+.mail img{max-width:100%;height:auto}
 .footer{text-align:center;font:28px var(--script);color:var(--blue)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -130,6 +136,17 @@ details summary{cursor:pointer;color:var(--muted);font-size:15px}
     <div class="send">
       <h3 id="t-sendTitle"></h3>
       <p class="muted" id="t-sendHint"></p>
+      <div class="bar">
+        <button id="genBtn" type="button"></button>
+      </div>
+      <div id="previewArea" class="preview" hidden>
+        <p class="muted" id="t-previewHint"></p>
+        <p class="note" id="staleNote" hidden></p>
+        <span class="plabel" id="t-pMain"></span>
+        <div class="mailwrap"><div class="mail" id="pMain" contenteditable="true" spellcheck="true"></div></div>
+        <span class="plabel" id="t-pOutlook"></span>
+        <div class="mailwrap"><div class="mail" id="pOutlook" contenteditable="true" spellcheck="true"></div></div>
+      </div>
       <div class="bar">
         <button class="primary" id="sendBtn" type="button"></button>
         <button class="link" id="resetBtn" type="button"></button>
@@ -171,7 +188,8 @@ const T = {
       fileTooBig:"Mindestens eine Datei ist zu gross (max. 4,4 MB). Bitte entfernen und als Link angeben.", tooMany:"Höchstens "+MAX_FILES+" Dateien pro Beitrag.",
       sendFail:"Senden hat nicht geklappt. Bitte nochmals versuchen – dein Entwurf ist gespeichert.",
       doneTitle:"Danke!", doneText:"Dein Beitrag ist bei "+RECIPIENT_NAME+" angekommen.", again:"Weiteren Beitrag erfassen",
-      confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", files:"Dateien", kw:"KW"},
+      confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", files:"Dateien", kw:"KW",
+      gen:"Weekly Highlights generieren", regen:"Neu generieren (überschreibt deine Änderungen)", previewHint:"So erscheint dein Beitrag in den Weekly Highlights. Du kannst den Text direkt hier anpassen – gesendet wird diese Version.", pMain:"Highlights und Team", pOutlook:"Ausblick auf nächste Woche", stale:"Du hast Felder geändert, seit die Vorschau erstellt wurde. «Neu generieren», um sie zu übernehmen – sonst wird die Vorschau so gesendet.", noOutlook:"(kein Ausblick)"},
   fr:{script:"Santé !", hero:"Votre contribution de la semaine", heroSub:"Remplissez ce que vous avez – les champs vides sont ignorés. Avec « Envoyer », le texte, les photos et les vidéos partent directement chez "+RECIPIENT_NAME+".",
       sendTitle:"C'est prêt ?", sendHint:"Un clic suffit. "+RECIPIENT_NAME+" en tire les Weekly Highlights pour tout le marketing.",
       send:"Envoyer", sending:"Envoi en cours …", uploading:"Envoi des fichiers", reset:"Tout effacer", remove:"Retirer",
@@ -180,7 +198,8 @@ const T = {
       fileTooBig:"Au moins un fichier est trop lourd (4,4 Mo max.). Retirez-le et indiquez plutôt un lien.", tooMany:"Au maximum "+MAX_FILES+" fichiers par contribution.",
       sendFail:"L'envoi n'a pas abouti. Réessayez – votre brouillon est conservé.",
       doneTitle:"Merci !", doneText:"Votre contribution est bien arrivée chez "+RECIPIENT_NAME+".", again:"Saisir une autre contribution",
-      confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", files:"fichiers", kw:"S"}
+      confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", files:"fichiers", kw:"S",
+      gen:"Générer les Weekly Highlights", regen:"Régénérer (remplace vos modifications)", previewHint:"Voici votre contribution telle qu'elle apparaîtra dans les Weekly Highlights. Vous pouvez modifier le texte directement ici – c'est cette version qui sera envoyée.", pMain:"Temps forts et équipe", pOutlook:"La semaine prochaine", stale:"Vous avez modifié des champs depuis la création de l'aperçu. Cliquez sur « Régénérer » pour les reprendre – sinon l'aperçu est envoyé tel quel.", noOutlook:"(aucun point)"}
 };
 
 const $=id=>document.getElementById(id);
@@ -208,13 +227,16 @@ function loadDraft(){ try{ const s=JSON.parse(store.get("whb-draft")||"null"); i
 let state=loadDraft();
 let saveTimer;
 function save(){
+  markStale();
   store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
   clearTimeout(saveTimer); $("saved").textContent=tr("savedAt")+" ✓";
   saveTimer=setTimeout(()=>{$("saved").textContent="";},2500);
 }
 
 // Shrink photos to max 1600 px JPEG.
-async function prepare(file){
+let fileSeq=0;
+async function prepare(file){ const p=await prepare0(file); p.id="f"+(++fileSeq); return p; }
+async function prepare0(file){
   const isImg=file.type.startsWith("image/") && !/gif|svg/.test(file.type);
   if(isImg){
     try{
@@ -236,14 +258,14 @@ async function addFiles(it,list){
     if(allFiles().length>=MAX_FILES){ setStatus(tr("tooMany"),"err"); break; }
     const p=await prepare(f); p.url=p.kind==="img"?URL.createObjectURL(p.blob):""; arr.push(p);
   }
-  render();
+  markStale(); render();
 }
 function allFiles(){ const out=[]; state.highlight.forEach(it=>filesOf(it).forEach(f=>out.push(f))); return out; }
 
 function render(){
   document.documentElement.lang=lang;
   ["script","hero","heroSub","sendTitle","sendHint","doneTitle","doneText"].forEach(k=>$("t-"+k).textContent=tr(k));
-  $("sendBtn").textContent=tr("send"); $("resetBtn").textContent=tr("reset"); $("againBtn").textContent=tr("again");
+  $("sendBtn").textContent=tr("send"); $("genBtn").textContent=previewOn?tr("regen"):tr("gen"); ["previewHint","pMain","pOutlook"].forEach(k=>$("t-"+k).textContent=tr(k)); $("staleNote").textContent=tr("stale"); $("resetBtn").textContent=tr("reset"); $("againBtn").textContent=tr("again");
   $("wkThis").textContent=tr("thisW"); $("wkLast").textContent=tr("lastW");
   $("wkThis").setAttribute("aria-pressed",offset===0); $("wkLast").setAttribute("aria-pressed",offset===1);
   $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
@@ -295,7 +317,7 @@ function mediaBlock(it,key){
     const nm=document.createElement("span"); nm.className="nm"; nm.textContent=f.name;
     const sz=document.createElement("span"); sz.className="sz"; sz.textContent=mb(f.blob.size)+(big?" – "+tr("tooBig"):"");
     const rm=document.createElement("button"); rm.className="link"; rm.type="button"; rm.textContent=tr("remove");
-    rm.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); filesOf(it).splice(i,1); render(); };
+    rm.onclick=()=>{ if(f.url) URL.revokeObjectURL(f.url); filesOf(it).splice(i,1); markStale(); render(); };
     li.append(th,nm,sz,rm); list.append(li);
   });
   if(filesOf(it).length) wrap.append(list);
@@ -307,6 +329,58 @@ const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
 function hasContent(){
   return state.highlight.some(i=>clean(i.title)||clean(i.detail)||filesOf(i).length) || state.outlook.some(i=>clean(i.title)) || state.team.some(i=>clean(i.title)||clean(i.detail));
 }
+
+// ---------- Preview in the format of the weekly mail (editable) ----------
+let previewOn=false, previewStale=false;
+function markStale(){ if(previewOn){ previewStale=true; $("staleNote").hidden=false; } }
+const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const F='font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#000000;';
+const P=h=>'<p style="'+F+'margin:0 0 10px 0;">'+h+'</p>';
+const para=t=>esc(t).split(/\n\s*\n/).map(b=>P(b.replace(/\n/g,"<br>"))).join("");
+const bullets=(items,bold)=>'<ul style="'+F+'margin:14px 0 8px 0;padding-left:24px;">'+items.map(t=>'<li style="'+F+'margin:0 0 4px 0;">'+(bold?'<b>'+esc(t)+'</b>':esc(t))+'</li>').join("")+'</ul>';
+function previewMain(){
+  let h="";
+  state.highlight.forEach(i=>{
+    const title=clean(i.title), detail=clean(i.detail), fs=filesOf(i);
+    if(!title&&!detail&&!fs.length) return;
+    h+=bullets([title||detail.split("\n")[0]||"Highlight"],true);
+    const rest=title?detail:detail.split("\n").slice(1).join("\n");
+    if(rest.trim()) h+=para(rest);
+    const imgs=fs.filter(f=>f.kind==="img"), vids=fs.filter(f=>f.kind==="vid");
+    if(imgs.length){ const w=imgs.length===1?480:236; h+='<p style="'+F+'margin:0 0 10px 0;">'+imgs.map(f=>'<img data-fid="'+f.id+'" src="'+f.url+'" width="'+w+'" alt="'+esc(f.name)+'" style="width:'+w+'px;max-width:100%;height:auto;margin:0 8px 8px 0;vertical-align:top;">').join("")+'</p>'; }
+    vids.forEach(f=>{ h+=P('▶ <a data-fid="'+f.id+'" href="#" style="color:#004993;">Video ansehen ('+esc(f.name)+')</a>'); });
+    if(clean(i.link)) h+=P('▶ <a href="'+esc(clean(i.link))+'" style="color:#004993;">Video / Fotos ansehen</a>');
+    if(clean(i.next)) h+=bullets([clean(i.next)],false);
+    h+=P("&nbsp;");
+  });
+  const team=state.team.filter(i=>clean(i.title)||clean(i.detail));
+  if(team.length){
+    h+=P("<b>Team</b>");
+    team.forEach(i=>{ const t=clean(i.title), d=clean(i.detail); h+=bullets([t||d.split("\n")[0]],false); const r=t?d:d.split("\n").slice(1).join("\n"); if(r.trim()) h+=para(r); });
+  }
+  return h;
+}
+function previewOutlook(){ const o=state.outlook.map(i=>clean(i.title)).filter(Boolean); return o.length?bullets(o,false):""; }
+$("genBtn").onclick=()=>{
+  if(!hasContent()){ setStatus(tr("empty"),"err"); return; }
+  $("pMain").innerHTML=previewMain()||P("&nbsp;");
+  $("pOutlook").innerHTML=previewOutlook()||P(esc(tr("noOutlook")));
+  previewOn=true; previewStale=false; $("staleNote").hidden=true; $("previewArea").hidden=false;
+  $("genBtn").textContent=tr("regen"); setStatus("");
+  $("previewArea").scrollIntoView({behavior:"smooth",block:"start"});
+};
+// Turn the edited preview into the HTML that is sent: local photo previews become stored media links.
+function exportPreview(el,keyById){
+  const c=el.cloneNode(true);
+  c.querySelectorAll("[data-fid]").forEach(n=>{
+    const key=keyById[n.getAttribute("data-fid")];
+    if(!key){ (n.tagName==="IMG"?n:n.closest("p")||n).remove(); return; }
+    if(n.tagName==="IMG") n.setAttribute("src","/api/media/"+key); else n.setAttribute("href","/api/media/"+key);
+    n.removeAttribute("data-fid");
+  });
+  return c.innerHTML;
+}
+function hidePreview(){ previewOn=false; previewStale=false; $("previewArea").hidden=true; $("pMain").innerHTML=""; $("pOutlook").innerHTML=""; }
 
 async function upload(f){
   const res=await fetch("/api/upload",{method:"POST",headers:{"content-type":f.blob.type||"application/octet-stream","x-filename":encodeURIComponent(f.name)},body:f.blob});
@@ -331,11 +405,13 @@ $("sendBtn").onclick=async ()=>{
       outlook: state.outlook.map(i=>({title:clean(i.title)})),
       team: state.team.map(i=>({title:clean(i.title),detail:clean(i.detail)}))
     };
-    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items})});
+    const keyById={}; files.forEach(f=>keyById[f.id]=f.key);
+    const html=previewOn?{main:exportPreview($("pMain"),keyById),outlook:exportPreview($("pOutlook"),keyById)}:null;
+    const res=await fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({week:W.key,lang,items,html})});
     if(!res.ok) throw new Error("submit "+res.status);
     files.forEach(f=>f.url&&URL.revokeObjectURL(f.url));
     state=blank(); store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
-    setStatus(""); $("formArea").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
+    hidePreview(); setStatus(""); $("formArea").hidden=true; $("doneBox").hidden=false; window.scrollTo(0,0);
   }catch(e){
     setStatus(tr("sendFail"),"err");
   }finally{ btn.disabled=false; btn.textContent=tr("send"); }
@@ -344,7 +420,7 @@ $("againBtn").onclick=()=>{ $("doneBox").hidden=true; $("formArea").hidden=false
 $("resetBtn").onclick=()=>{
   const r=$("resetBtn");
   if(!r.dataset.arm){ r.dataset.arm="1"; r.textContent=tr("confirmReset"); setTimeout(()=>{delete r.dataset.arm; r.textContent=tr("reset");},4000); return; }
-  delete r.dataset.arm; state=blank(); save(); render(); setStatus("");
+  delete r.dataset.arm; state=blank(); save(); hidePreview(); render(); setStatus("");
 };
 function setWeek(o){ offset=o; W=weekInfo(o); state=loadDraft(); render(); setStatus(""); }
 $("wkThis").onclick=()=>setWeek(0);
