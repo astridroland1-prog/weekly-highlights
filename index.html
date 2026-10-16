@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Weekly Highlights Marketing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Yellowtail&display=swap">
+<style>
+/* Layout: brand band with week badge, then one narrow column of three numbered sections and a send panel. */
+:root{
+  --blue:#004993; --blue-ink:#00356B; --blue-soft:#E8EFF8;
+  --bg:#F2F5F9; --card:#FFFFFF; --ink:#0E1C30; --muted:#566377; --line:#D9E1EC; --field:#F7F9FC;
+  --gold:#B1934B; --gold-light:#E7D3A4; --red:#C0281A; --ok:#2F6B3F;
+  --band-ink:#FFFFFF; --band-sub:#D7E3F3;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow","Segoe UI",Arial,sans-serif;
+  --script:"Yellowtail","Brush Script MT",cursive;
+  --mono:Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --blue:#6FA3E0; --blue-ink:#9CC2EE; --blue-soft:#16263B;
+  --bg:#0C1522; --card:#132033; --ink:#E6ECF4; --muted:#9AA8BB; --line:#26364C; --field:#0F1A2A;
+  --gold:#D2B46B; --gold-light:#E7D3A4; --red:#FF7A6B; --ok:#7CC48E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --blue:#6FA3E0; --blue-ink:#9CC2EE; --blue-soft:#16263B;
+  --bg:#0C1522; --card:#132033; --ink:#E6ECF4; --muted:#9AA8BB; --line:#26364C; --field:#0F1A2A;
+  --gold:#D2B46B; --gold-light:#E7D3A4; --red:#FF7A6B; --ok:#7CC48E; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--body)}
+.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:600 15px var(--body);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 16px;cursor:pointer}
+button:hover{border-color:var(--blue)}
+:is(button,input,textarea):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button.primary{background:#004993;border-color:#004993;color:#fff;font-size:17px;padding:12px 22px}
+button.primary:hover{background:#00356B}
+button.link{border:0;background:none;padding:4px 6px;color:var(--muted);font-weight:500;font-size:14px}
+button.link:hover{color:var(--red);text-decoration:underline}
+
+/* Brand band keeps its colours in both themes */
+.band{background:#004993;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 14px,transparent 14px 28px),radial-gradient(circle at 85% -20%,rgba(231,211,164,.25),transparent 55%);color:var(--band-ink);border-bottom:4px solid #B1934B}
+.band .wrap{padding-block:22px 30px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
+.brand h1{font:700 32px/1 var(--display);margin:0;letter-spacing:.06em;text-transform:uppercase}
+.brand p{margin:4px 0 0;font:600 13px var(--display);letter-spacing:.18em;text-transform:uppercase;color:#E7D3A4}
+.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kw{background:rgba(0,30,70,.45);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:5px 14px;text-align:center;line-height:1.15;font-variant-numeric:tabular-nums}
+.kw b{display:block;font:700 24px var(--display);letter-spacing:.04em}
+.kw span{font-size:13px;color:var(--band-sub)}
+.seg{display:flex;gap:2px}
+.seg button{padding:5px 9px;font-size:13px;border-radius:8px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
+.seg button[aria-pressed="true"]{background:#fff;color:#004993;border-color:#fff}
+.hero{margin-top:26px}
+.hero .script{font:34px/1 var(--script);color:#E7D3A4;display:block}
+.hero h2{font:700 clamp(28px,5vw,40px)/1.05 var(--display);margin:0;text-transform:uppercase;letter-spacing:.03em;text-wrap:balance}
+.hero p{margin:8px 0 0;color:var(--band-sub);max-width:60ch}
+
+main.wrap{padding-block:26px 70px;display:grid;gap:26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:14px}
+label{display:grid;gap:6px;font-weight:600;font-size:15px}
+input,textarea{font:16px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.75}
+textarea{resize:vertical;min-height:96px}
+input.invalid{border-color:var(--red)}
+.sec{display:grid;gap:12px}
+.sec h3{display:flex;align-items:center;gap:10px;font:700 23px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--blue)}
+.sec h3::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+.sec h3 .n{width:30px;height:30px;border-radius:50%;background:#004993;color:#fff;display:grid;place-items:center;font-size:17px;flex:none}
+.sec .hint{margin:-6px 0 0;color:var(--muted);font-size:15px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.item .top{display:flex;justify-content:space-between;align-items:center}
+.item .top span{font:700 14px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:600px){.row2{grid-template-columns:1fr}}
+.add{justify-self:start;color:var(--blue);border-color:var(--blue);border-style:dashed;background:transparent}
+.send{background:var(--card);border:2px solid var(--blue);border-radius:14px;padding:20px;display:grid;gap:12px}
+.send h3{font:700 24px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--blue)}
+.steps{margin:0;padding-left:20px;color:var(--muted);font-size:15px;display:grid;gap:2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.to{font-size:15px;color:var(--muted)}
+.to code{font:14px var(--mono);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px;padding:2px 6px;user-select:all}
+.status{font-size:15px;color:var(--muted);min-height:1.5em;margin:0}
+.status.ok{color:var(--ok);font-weight:600}
+.status.err{color:var(--red);font-weight:600}
+.saved{font-size:13px;color:var(--muted)}
+pre{font:14px/1.55 var(--mono);white-space:pre-wrap;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;max-height:320px;overflow:auto;color:var(--ink)}
+details summary{cursor:pointer;color:var(--muted);font-size:15px}
+.footer{text-align:center;font:28px var(--script);color:var(--blue)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="band"><div class="wrap">
+  <header>
+    <div class="brand"><h1>Weekly Highlights</h1><p>Marketing Feldschlösschen</p></div>
+    <div class="right">
+      <div class="kw"><b id="kwLabel"></b><span id="rangeLabel"></span></div>
+      <div class="seg" role="group" aria-label="Woche"><button id="wkThis" type="button" aria-pressed="true"></button><button id="wkLast" type="button" aria-pressed="false"></button></div>
+      <div class="seg" role="group" aria-label="Sprache / Langue"><button id="langDE" type="button" aria-pressed="true">DE</button><button id="langFR" type="button" aria-pressed="false">FR</button></div>
+    </div>
+  </header>
+  <div class="hero">
+    <span class="script" id="t-script"></span>
+    <h2 id="t-hero"></h2>
+    <p id="t-heroSub"></p>
+  </div>
+</div></div>
+
+<main class="wrap">
+  <div class="card">
+    <label for="name"><span id="t-name"></span></label>
+    <input id="name" autocomplete="name">
+  </div>
+  <div id="sections" style="display:grid;gap:26px"></div>
+  <div class="send">
+    <h3 id="t-sendTitle"></h3>
+    <ol class="steps"><li id="t-step1"></li><li id="t-step2"></li></ol>
+    <div class="bar">
+      <button class="primary" id="copyBtn" type="button"></button>
+      <button id="mailBtn" type="button"></button>
+      <button class="link" id="resetBtn" type="button"></button>
+    </div>
+    <p class="to" id="toLine"></p>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <span class="saved" id="saved"></span>
+    <details id="previewBox"><summary id="t-preview"></summary><pre id="preview"></pre></details>
+  </div>
+  <div class="footer">Merci &amp; Proscht!</div>
+</main>
+
+<script>
+// Empfängerin der Beiträge (Arbeitsadresse eintragen, z. B. "vorname.name@fgs.ch"). Leer = Adresse wird nicht vorausgefüllt.
+const RECIPIENT = "";
+const RECIPIENT_NAME = "Astrid";
+
+const PARTS = [
+  {id:"highlight", n:1, fields:["title","detail","kpi","next"],
+   de:{name:"Highlights der Woche", hint:"Was ist diese Woche gelaufen? Ein Punkt pro Thema.", title:"Worum geht's?", titlePh:"Eine Runde auf uns – McArthur's Pub, Lenzburg", detail:"Was ist passiert?", detailPh:"Z. B.: Sechste Runde unserer Gastro-Aktion, 9 KEG in gut zwei Stunden. Danke an alle!", kpi:"Wichtigste Zahl", kpiPh:"9 KEG in 2 Std.", next:"Nächster Termin", nextPh:"Letzter Halt: Delémont am 10.09.", add:"+ Weiteres Highlight", item:"Highlight"},
+   fr:{name:"Les temps forts de la semaine", hint:"Qu'est-ce qui s'est passé cette semaine ? Un point par sujet.", title:"De quoi s'agit-il ?", titlePh:"Une tournée offerte – McArthur's Pub, Lenzburg", detail:"Que s'est-il passé ?", detailPh:"P. ex. : 6e étape de notre action gastro, 9 KEG en à peine deux heures. Merci à toutes et à tous !", kpi:"Chiffre clé", kpiPh:"9 KEG en 2 h", next:"Prochaine date", nextPh:"Dernière étape : Delémont le 10.09.", add:"+ Ajouter un temps fort", item:"Temps fort"}},
+  {id:"outlook", n:2, fields:["title"],
+   de:{name:"Ausblick nächste Woche", hint:"Was steht nächste Woche an? Eine Zeile reicht.", title:"Was steht an?", titlePh:"OLMA-Vorbereitungen", add:"+ Weiterer Punkt", item:"Ausblick"},
+   fr:{name:"La semaine prochaine", hint:"Qu'est-ce qui est prévu ? Une ligne suffit.", title:"Qu'est-ce qui est prévu ?", titlePh:"Préparatifs OLMA", add:"+ Ajouter un point", item:"Point"}},
+  {id:"team", n:3, fields:["title","detail"],
+   de:{name:"Team", hint:"Neue Gesichter, Jubiläen, ein Dankeschön.", title:"Was gibt's Neues?", titlePh:"Willkommen im Team, …", detail:"Ein, zwei Sätze dazu", detailPh:"Seit Montag verstärkt … das Brand-Team.", add:"+ Weitere Team-News", item:"Team-News"},
+   fr:{name:"L'équipe", hint:"Arrivées, anniversaires de service, un merci.", title:"Quoi de neuf ?", titlePh:"Bienvenue dans l'équipe, …", detail:"Une ou deux phrases", detailPh:"Depuis lundi, … renforce l'équipe Brand.", add:"+ Ajouter une nouvelle", item:"Nouvelle"}}
+];
+const T = {
+  de:{script:"Proscht!", hero:"Dein Beitrag für diese Woche", heroSub:"Fülle aus, was du hast – leere Felder werden ignoriert. Dein Entwurf bleibt in diesem Browser gespeichert, bis die Woche vorbei ist.",
+      name:"Dein Name", sendTitle:"Fertig?", step1:"Auf «Text kopieren» klicken.", step2:"In eine Mail oder eine Teams-Nachricht an "+RECIPIENT_NAME+" einfügen und senden.",
+      copy:"Text kopieren", mail:"E-Mail-Programm öffnen", reset:"Alles leeren", preview:"Vorschau anzeigen", remove:"Entfernen",
+      thisW:"Diese Woche", lastW:"Letzte Woche", to:"An", toNone:"Empfängerin: "+RECIPIENT_NAME,
+      needName:"Bitte zuerst deinen Namen eintragen.", empty:"Du hast noch nichts eingetragen.",
+      copied:"Kopiert. Jetzt in eine Mail oder in Teams an "+RECIPIENT_NAME+" einfügen (Strg+V).", copyFail:"Kopieren nicht möglich – der Text unten ist markiert, bitte mit Strg+C kopieren.",
+      mailTried:"Falls sich kein Mailprogramm geöffnet hat: Text kopieren und selbst einfügen.", tooLong:"Für eine automatische Mail ist der Text zu lang. Bitte «Text kopieren» nutzen.",
+      confirmReset:"Nochmals klicken zum Leeren", savedAt:"Entwurf gespeichert", kw:"KW", subject:"Weekly Highlights"},
+  fr:{script:"Santé !", hero:"Votre contribution de la semaine", heroSub:"Remplissez ce que vous avez – les champs vides sont ignorés. Votre brouillon reste enregistré dans ce navigateur jusqu'à la fin de la semaine.",
+      name:"Votre nom", sendTitle:"C'est prêt ?", step1:"Cliquez sur « Copier le texte ».", step2:"Collez-le dans un e-mail ou un message Teams à "+RECIPIENT_NAME+", puis envoyez.",
+      copy:"Copier le texte", mail:"Ouvrir la messagerie", reset:"Tout effacer", preview:"Afficher l'aperçu", remove:"Retirer",
+      thisW:"Cette semaine", lastW:"Semaine passée", to:"À", toNone:"Destinataire : "+RECIPIENT_NAME,
+      needName:"Indiquez d'abord votre nom.", empty:"Vous n'avez encore rien saisi.",
+      copied:"Copié. Collez-le maintenant dans un e-mail ou dans Teams pour "+RECIPIENT_NAME+" (Ctrl+V).", copyFail:"Copie impossible – le texte ci-dessous est sélectionné, copiez-le avec Ctrl+C.",
+      mailTried:"Si aucune messagerie ne s'est ouverte : copiez le texte et collez-le vous-même.", tooLong:"Le texte est trop long pour un e-mail automatique. Utilisez « Copier le texte ».",
+      confirmReset:"Cliquez encore pour effacer", savedAt:"Brouillon enregistré", kw:"S", subject:"Weekly Highlights"}
+};
+
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let lang=store.get("whb-lang")||((navigator.language||"").toLowerCase().startsWith("fr")?"fr":"de");
+const tr=k=>T[lang][k];
+
+function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return{y,w:Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)};}
+const fmt=d=>d.getDate()+"."+(d.getMonth()+1)+".";
+function weekInfo(offset){
+  const m=mondayOf(new Date()); m.setDate(m.getDate()-7*offset);
+  const {y,w}=isoWeek(m); const s=new Date(m); s.setDate(s.getDate()+6);
+  return {week:w, key:y+"-W"+String(w).padStart(2,"0"), range:fmt(m)+" – "+fmt(s)+s.getFullYear()};
+}
+let offset=0, W=weekInfo(0);
+
+const blank=()=>({highlight:[{}],outlook:[{}],team:[{}]});
+function loadDraft(){ try{ const s=JSON.parse(store.get("whb-draft")||"null"); if(s&&s.week===W.key&&s.items) return s.items; }catch(e){} return blank(); }
+let state=loadDraft();
+$("name").value=store.get("whb-name")||"";
+let saveTimer;
+function save(){
+  store.set("whb-draft",JSON.stringify({week:W.key,items:state}));
+  store.set("whb-name",$("name").value.trim());
+  updatePreview();
+  clearTimeout(saveTimer); $("saved").textContent=tr("savedAt")+" ✓";
+  saveTimer=setTimeout(()=>{$("saved").textContent="";},2500);
+}
+
+function render(){
+  document.documentElement.lang=lang;
+  ["script","hero","heroSub","name","sendTitle","step1","step2","preview"].forEach(k=>$("t-"+k).textContent=tr(k));
+  $("copyBtn").textContent=tr("copy"); $("mailBtn").textContent=tr("mail"); $("resetBtn").textContent=tr("reset");
+  $("wkThis").textContent=tr("thisW"); $("wkLast").textContent=tr("lastW");
+  $("wkThis").setAttribute("aria-pressed",offset===0); $("wkLast").setAttribute("aria-pressed",offset===1);
+  $("kwLabel").textContent=tr("kw")+" "+W.week; $("rangeLabel").textContent=W.range;
+  $("langDE").setAttribute("aria-pressed",lang==="de"); $("langFR").setAttribute("aria-pressed",lang==="fr");
+  const to=$("toLine"); to.textContent="";
+  if(RECIPIENT.indexOf("@")>0){ to.append(tr("to")+": "); const c=document.createElement("code"); c.textContent=RECIPIENT; to.append(c); }
+  else to.textContent=tr("toNone");
+  const box=$("sections"); box.innerHTML="";
+  PARTS.forEach(p=>{
+    const L=p[lang];
+    const sec=document.createElement("section"); sec.className="sec";
+    const h=document.createElement("h3"); const n=document.createElement("span"); n.className="n"; n.textContent=p.n; const t=document.createElement("span"); t.textContent=L.name; h.append(n,t);
+    const hint=document.createElement("p"); hint.className="hint"; hint.textContent=L.hint;
+    sec.append(h,hint);
+    state[p.id].forEach((it,ix)=>{
+      const card=document.createElement("div"); card.className="item";
+      const top=document.createElement("div"); top.className="top";
+      const lbl=document.createElement("span"); lbl.textContent=L.item+" "+(ix+1); top.append(lbl);
+      if(state[p.id].length>1){ const rm=document.createElement("button"); rm.className="link"; rm.type="button"; rm.textContent=tr("remove"); rm.onclick=()=>{ state[p.id].splice(ix,1); save(); render(); }; top.append(rm); }
+      card.append(top);
+      const mk=(f,multi)=>{ const l=document.createElement("label"); const s=document.createElement("span"); s.textContent=L[f]; l.append(s);
+        const el=document.createElement(multi?"textarea":"input"); el.placeholder=L[f+"Ph"]||""; el.value=it[f]||""; el.id=p.id+"-"+ix+"-"+f;
+        el.addEventListener("input",()=>{ it[f]=el.value; save(); }); l.append(el); return l; };
+      if(p.fields.includes("title")) card.append(mk("title"));
+      if(p.fields.includes("detail")) card.append(mk("detail",true));
+      if(p.fields.includes("kpi")){ const r=document.createElement("div"); r.className="row2"; r.append(mk("kpi"),mk("next")); card.append(r); }
+      sec.append(card);
+    });
+    const add=document.createElement("button"); add.type="button"; add.className="add"; add.textContent=L.add;
+    add.onclick=()=>{ state[p.id].push({}); save(); render(); const last=$(p.id+"-"+(state[p.id].length-1)+"-title"); if(last) last.focus(); };
+    sec.append(add);
+    box.append(sec);
+  });
+  updatePreview();
+}
+
+// Fixed, machine-readable format. Headings stay German in every language so the compiled mail stays uniform.
+function buildText(){
+  const name=$("name").value.trim();
+  const clean=s=>(s||"").replace(/\r/g,"").replace(/\n{3,}/g,"\n\n").trim();
+  const lines=["Weekly Highlights – KW "+W.week+" ("+W.key+") – von "+(name||"?"),""];
+  const heads={highlight:"HIGHLIGHTS DER WOCHE",outlook:"AUSBLICK NÄCHSTE WOCHE",team:"TEAM"};
+  let count=0;
+  PARTS.forEach(p=>{
+    const items=state[p.id].filter(i=>clean(i.title)||clean(i.detail));
+    if(!items.length) return;
+    lines.push(heads[p.id]);
+    items.forEach(i=>{
+      count++;
+      const title=clean(i.title), detail=clean(i.detail);
+      lines.push("* "+(title||detail.split("\n")[0]));
+      const rest=title?detail:detail.split("\n").slice(1).join("\n").trim();
+      if(rest) rest.split("\n").forEach(l=>lines.push("  "+l));
+      if(clean(i.kpi)) lines.push("  Zahl: "+clean(i.kpi));
+      if(clean(i.next)) lines.push("  Nächster Termin: "+clean(i.next));
+    });
+    lines.push("");
+  });
+  lines.push("-- Ende Weekly Highlights --");
+  return {text:lines.join("\n"),count,name};
+}
+function updatePreview(){ $("preview").textContent=buildText().text; }
+function setStatus(msg,kind){ const s=$("status"); s.textContent=msg; s.className="status"+(kind?" "+kind:""); }
+function selectPreview(){ $("previewBox").open=true; const r=document.createRange(); r.selectNodeContents($("preview")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+function check(){
+  const b=buildText(); $("name").classList.toggle("invalid",!b.name);
+  if(!b.name){ setStatus(tr("needName"),"err"); $("name").focus(); return null; }
+  if(!b.count){ setStatus(tr("empty"),"err"); return null; }
+  return b;
+}
+
+$("copyBtn").onclick=()=>{
+  const b=check(); if(!b) return;
+  const done=ok=>{ setStatus(ok?tr("copied"):tr("copyFail"),ok?"ok":"err"); if(!ok) selectPreview(); };
+  try{ navigator.clipboard.writeText(b.text).then(()=>done(true),()=>done(false)); }catch(e){ done(false); }
+};
+$("mailBtn").onclick=()=>{
+  const b=check(); if(!b) return;
+  const to=RECIPIENT.indexOf("@")>0?RECIPIENT:"";
+  const url="mailto:"+to+"?subject="+encodeURIComponent(tr("subject")+" KW "+W.week+" – "+b.name)+"&body="+encodeURIComponent(b.text);
+  if(url.length>1900){ setStatus(tr("tooLong"),"err"); return; }
+  const a=document.createElement("a"); a.href=url; a.style.display="none"; document.body.append(a); a.click(); a.remove();
+  setStatus(tr("mailTried"));
+};
+$("resetBtn").onclick=()=>{
+  const r=$("resetBtn");
+  if(!r.dataset.arm){ r.dataset.arm="1"; r.textContent=tr("confirmReset"); setTimeout(()=>{delete r.dataset.arm; r.textContent=tr("reset");},4000); return; }
+  delete r.dataset.arm; state=blank(); save(); render(); setStatus("");
+};
+$("name").addEventListener("input",()=>{ $("name").classList.remove("invalid"); save(); });
+function setWeek(o){ offset=o; W=weekInfo(o); state=loadDraft(); render(); setStatus(""); }
+$("wkThis").onclick=()=>setWeek(0);
+$("wkLast").onclick=()=>setWeek(1);
+$("langDE").onclick=()=>{ lang="de"; store.set("whb-lang","de"); render(); };
+$("langFR").onclick=()=>{ lang="fr"; store.set("whb-lang","fr"); render(); };
+render();
+</script>
+</body>
+</html>
