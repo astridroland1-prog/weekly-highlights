@@ -84,6 +84,14 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
 .paperwrap{background:#fff;overflow-x:auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,8,80,.10);border:1px solid var(--line)}
 .paper{background:#fff;color:#000;padding:36px 40px;min-height:360px;outline:none;max-width:760px}
 .paper img{max-width:100%;height:auto}
+.arch{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:40vh;overflow:auto}
+.arch button{width:100%;text-align:left;display:grid;gap:2px;background:var(--field);padding:9px 12px;font-weight:500}
+.arch button b{font:700 17px var(--display);letter-spacing:.04em}
+.arch button span{font-size:13px;color:var(--muted)}
+.arch button[aria-current="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:#FFF6E0;color:#6B4E00;border:1px solid #EBD38F;border-radius:12px;padding:10px 14px;font-size:15px}
+@media (prefers-color-scheme:dark){.banner{background:#3A2E0E;color:#F3DFA6;border-color:#6B5520}}
+.sentbadge{display:inline-block;background:var(--ok);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-top:6px}
 .paper .placeholder{color:#7a7f99;font-family:var(--body);text-align:center;padding:60px 20px}
 </style>
 </head>
@@ -109,7 +117,7 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
       <section class="card">
         <div class="weeknav">
           <button id="prevW" type="button" aria-label="Semaine précédente">‹</button>
-          <div><b id="wkLabel"></b><span id="wkRange"></span></div>
+          <div><b id="wkLabel"></b><span id="wkRange"></span><br><span class="sentbadge" id="sentBadge" hidden></span></div>
           <button id="nextW" type="button" aria-label="Semaine suivante">›</button>
         </div>
         <div class="stats">
@@ -124,6 +132,11 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <h2>Entrées de la semaine</h2>
         <ul class="entries" id="entries"></ul>
       </section>
+      <section class="card">
+        <h2>Archives</h2>
+        <p class="muted">Chaque compilation envoyée est gardée ici.</p>
+        <ul class="arch" id="archList"></ul>
+      </section>
     </aside>
 
     <section class="editor">
@@ -135,6 +148,7 @@ aside{display:grid;gap:16px;position:sticky;top:16px}
         <p class="muted" id="sendMode" style="flex-basis:100%"></p>
         <p class="status" id="copyStatus" role="status" aria-live="polite" style="flex-basis:100%"></p>
       </div>
+      <div class="banner" id="archBanner" hidden><span id="archInfo"></span><button type="button" id="archBack">Revenir à la compilation en cours</button></div>
       <div class="subject"><span>Objet :</span><b id="subject"></b><button class="ghost" id="copySubject" type="button">Copier</button></div>
       <p class="muted">Corrigez le texte directement dans le mail ci-dessous, puis « Copier pour Outlook » et collez dans un nouveau mail avec Ctrl+V. Les photos restent dans le texte.</p>
       <div class="paperwrap"><div class="paper" id="mail" contenteditable="true" spellcheck="true"></div></div>
@@ -147,6 +161,9 @@ const $=id=>document.getElementById(id);
 const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}};
 let PW=ss.get("wh-pw")||"";
 let entries=[];
+let CUR=null;            // week shown in the editor
+let ARCH=[];             // archive list
+let viewingArchive=false;
 const IMG_ONE=320, IMG_MANY=190;   // display widths in the e-mail (px)
 
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -167,7 +184,7 @@ async function api(method,query){
   return res.json();
 }
 async function load(){
-  const W=weekInfo();
+  const W=weekInfo(); CUR=W; leaveArchive(false);
   $("wkLabel").textContent="KW "+W.week; $("wkRange").textContent=W.range; $("nextW").disabled=offset<=-1;
   $("subject").textContent="Weekly Highlights KW "+W.week;
   setStatus("status","Chargement …");
@@ -180,7 +197,7 @@ async function load(){
     entries=(await r.json()).items||[];
     if(adminWarn) setTimeout(()=>setStatus("status",$("status").textContent+adminWarn,"err"),0);
     setStatus("status", entries.length?"À jour – "+new Date().toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"})+".":"Aucune entrée pour cette semaine pour l'instant.", entries.length?"ok":"");
-    renderEntries(); buildMail(); probeSend();
+    renderEntries(); buildMail(); probeSend(); loadArchive();
     return true;
   }catch(e){
     if(e.message==="password"){ PW=""; ss.set("wh-pw",""); $("app").hidden=true; $("loginBox").hidden=false; setStatus("loginStatus","Mot de passe incorrect.","err"); return false; }
@@ -268,6 +285,54 @@ function mailText(){
   })($("mail"));
   return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
 }
+// ---------- Archive ----------
+const fmtDate=iso=>{ const d=new Date(iso); return d.toLocaleDateString("fr-CH",{weekday:"short",day:"numeric",month:"numeric",year:"numeric"})+" à "+d.toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"}); };
+async function loadArchive(){
+  try{ const r=await fetch("/api/archive",{headers:{"x-admin-password":PW},cache:"no-store"}); if(r.ok) ARCH=(await r.json()).list||[]; }catch(e){}
+  renderArchive();
+}
+function renderArchive(){
+  const ul=$("archList"); ul.innerHTML="";
+  if(!ARCH.length){ const li=document.createElement("li"); li.className="empty"; li.textContent="Aucune compilation envoyée pour l'instant."; ul.append(li); }
+  ARCH.forEach(a=>{
+    const li=document.createElement("li"), b=document.createElement("button"); b.type="button";
+    const t=document.createElement("b"); t.textContent="KW "+parseInt(a.week.split("-W")[1],10)+" · "+a.week.slice(0,4);
+    const d=document.createElement("span"); d.textContent="Envoyée le "+fmtDate(a.sentAt);
+    b.append(t,d); b.setAttribute("aria-current",viewingArchive===a.week); b.onclick=()=>openArchive(a.week);
+    li.append(b); ul.append(li);
+  });
+  const mine=CUR && ARCH.find(a=>a.week===CUR.key);
+  $("sentBadge").hidden=!mine; if(mine) $("sentBadge").textContent="Envoyée le "+new Date(mine.sentAt).toLocaleDateString("fr-CH");
+}
+async function openArchive(week){
+  try{
+    const r=await fetch("/api/archive?week="+encodeURIComponent(week),{headers:{"x-admin-password":PW},cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    const a=await r.json();
+    viewingArchive=week;
+    $("mail").innerHTML=a.html; $("mail").contentEditable="false";
+    $("subject").textContent=a.subject||("Weekly Highlights KW "+parseInt(week.split("-W")[1],10));
+    $("archInfo").textContent="Archive : "+(a.subject||week)+" – envoyée le "+fmtDate(a.sentAt)+(a.to?" à "+a.to:"")+".";
+    $("archBanner").hidden=false; $("sendMail").hidden=true; $("rebuild").hidden=true;
+    setStatus("copyStatus",""); renderArchive(); window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){ setStatus("copyStatus","Archive introuvable ("+e.message+").","err"); }
+}
+function leaveArchive(rebuild){
+  if(!viewingArchive) return;
+  viewingArchive=false; $("mail").contentEditable="true"; $("archBanner").hidden=true; $("sendMail").hidden=false; $("rebuild").hidden=false;
+  if(CUR) $("subject").textContent="Weekly Highlights KW "+CUR.week;
+  if(rebuild){ buildMail(); renderArchive(); }
+}
+async function saveArchive(method){
+  if(!CUR) return;
+  try{
+    const r=await fetch("/api/archive",{method:"POST",headers:{"content-type":"application/json","x-admin-password":PW},
+      body:JSON.stringify({week:CUR.key,subject:$("subject").textContent,html:$("mail").innerHTML,text:mailText(),method,to:SEND.to})});
+    if(r.ok) await loadArchive();
+  }catch(e){}
+}
+$("archBack").onclick=()=>leaveArchive(true);
+
 // ---------- Send ----------
 let SEND={configured:false,to:"astrid.roland@fgg.ch"};
 async function probeSend(){
@@ -294,6 +359,7 @@ $("sendMail").onclick=async ()=>{
     let body=text.replace(/\n{3,}/g,"\n\n"), cut=false;
     while((base+encodeURIComponent(body)).length>1900){ body=body.slice(0,Math.floor(body.length*0.9)); cut=true; }
     if(cut) body=body.replace(/\s+\S*$/,"")+"\n\n[… Rest: mit Ctrl+V einfügen]";
+    await saveArchive("mail");
     location.href=base+encodeURIComponent(body);
     setStatus("copyStatus", cut
       ? "Un message à "+SEND.to+" s'ouvre avec le début du texte. La compilation complète avec les photos est copiée : effacez le texte du message, collez avec Ctrl+V, puis envoyez."
@@ -306,7 +372,8 @@ $("sendMail").onclick=async ()=>{
     const r=await fetch("/api/send",{method:"POST",headers:{"content-type":"application/json","x-admin-password":PW},body:JSON.stringify({subject,html:mailHtml(),text})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(j.error==="provider"?"service d'envoi ("+j.status+")":(j.error||r.status));
-    setStatus("copyStatus","Envoyé à "+SEND.to+" – « "+subject+" ».","ok");
+    setStatus("copyStatus","Envoyé à "+SEND.to+" – « "+subject+" ». Copie gardée dans les archives.","ok");
+    saveArchive("direct");
   }catch(e){ setStatus("copyStatus","L'envoi a échoué ("+e.message+"). Utilisez « Copier pour Outlook » en attendant.","err"); }
   finally{ btn.disabled=false; btn.textContent="Envoyer à "+SEND.to; }
 };
