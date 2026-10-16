@@ -20,6 +20,12 @@ function fields(section, src) {
   return empty ? null : out;
 }
 
+// Current ETag of an entry (read back after a write, so the editor can detect later conflicts).
+async function etagOf(s, id) {
+  const m = await s.getMetadata(id);
+  return (m && m.etag) || "";
+}
+
 export default async (req) => {
   const url = new URL(req.url);
   const s = store();
@@ -47,8 +53,8 @@ export default async (req) => {
     const now = new Date().toISOString();
     const id = `${week}/${Date.now()}-${section}-${crypto.randomUUID().slice(0, 8)}`;
     const item = { id, week, section, ...f, createdAt: now, updatedAt: now };
-    const res = await s.setJSON(id, item, { onlyIfNew: true });
-    return Response.json({ ...item, etag: res.etag });
+    await s.setJSON(id, item, { onlyIfNew: true });
+    return Response.json({ ...item, etag: await etagOf(s, id) });
   }
 
   if (req.method === "PUT") {
@@ -62,11 +68,11 @@ export default async (req) => {
     if (!f) return Response.json({ error: "empty" }, { status: 400 });
     const item = { ...cur.data, ...f, updatedAt: new Date().toISOString() };
     const res = await s.setJSON(id, item, { onlyIfMatch: cur.etag });
-    if (!res.modified) {
+    if (res && res.modified === false) {
       const now = await s.getWithMetadata(id, { type: "json" });
       return Response.json({ error: "conflict", item: now && { ...now.data, etag: now.etag } }, { status: 409 });
     }
-    return Response.json({ ...item, etag: res.etag });
+    return Response.json({ ...item, etag: (res && res.etag) || (await etagOf(s, id)) });
   }
 
   return new Response("Method not allowed", { status: 405 });
